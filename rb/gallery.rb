@@ -77,7 +77,13 @@ module Gallery
 			
 			sql_filters = []
 			sql_filter_vals = []
+          gallery = nil
 			if filters != nil and filters.is_a?(Hash) then
+              if filters['gallery'] != nil then
+                gallery = filters['gallery']
+                sql_filters.push('photo_galleries.gallery_name=?')
+                sql_filter_vals.push(filters['gallery'])
+              end
                 ['country', 'camera', 'author'].each do |type|
         			if filters[type] != nil then
                         sql_filters.push(type + '=?')
@@ -85,11 +91,15 @@ module Gallery
         			end
                 end
             end
+          if gallery != nil then
+			sql = 'SELECT * FROM photos JOIN photo_galleries ON photo_galleries.photo_name=photos.name'
+          else
 			sql = 'SELECT * FROM photos'
-			if sql_filters.length > 0 then
-                sql = sql + ' WHERE ' + sql_filters.join(' AND ')
-			end
-			sql = sql + ' ORDER BY name'
+          end
+          if sql_filters.length > 0 then
+            sql = sql + ' WHERE ' + sql_filters.join(' AND ')
+          end
+          sql = sql + ' ORDER BY name'
 			
 			database = SQLite3::Database.new(dbfile);
 			id = 0
@@ -102,6 +112,7 @@ module Gallery
 			end
 			
 			@total_count = id
+          return if @total_count == 0
 			
 			# Get extremes, to calculate proper day counts.
 			min_year  = @photos.keys.min

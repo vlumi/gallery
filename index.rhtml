@@ -18,6 +18,8 @@ else
 end
 
 filters = {}
+filters['gallery'] = 'lenkun'
+#filters['gallery'] = nil
 if cgi.has_key?('country') and cgi['country'].length > 0 then
     filters['country'] = cgi['country']
 end
