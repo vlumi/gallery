@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+ <head>
+  <link rel="stylesheet" type="text/css" href="css/gallery.css"/>
+  <script type="text/javascript" src="js/jquery-1.7.1.min.js"></script>
+  <script type="text/javascript" src="js/age.js"></script>
+  <script type="text/javascript">//<![CDATA[
+<%
+stime = Time.new.utc.to_a;
+stime[4] = stime[4] - 1; # adjust month
+%>
+     var serverd = new Date(Date.UTC(<%=stime[5]%>, <%=stime[4]%>, <%=stime[3]%>, <%=stime[2]%>, <%=stime[1]%>, <%=stime[0]%>));
+     var offset = serverd - new Date();;
+     $(document).ready(function() {
+        update_age();
+     });
+     // Birthday in UTC
+     var birthd = new Date(Date.UTC(2013, 11, 4, 12, 46, 0));
+     function update_age() {
+        var now = new Date(new Date().getTime() + offset);
+        $('#age').html(getDateDiffStr(new Date(birthd.getTime()), now, 'full'));
+        $('#age_years').html(getDateDiffStr(new Date(birthd.getTime()), now, 'years', 2));
+        $('#age_months').html(getDateDiffStr(new Date(birthd.getTime()), now, 'months', 2));
+        $('#age_weeks').html(getDateDiffStr(new Date(birthd.getTime()), now, 'weeks', 2));
+        $('#age_days').html(getDateDiffStr(new Date(birthd.getTime()), now, 'days', 2));
+        $('#age_hours').html(getDateDiffStr(new Date(birthd.getTime()), now, 'hours', 2));
+        $('#age_minutes').html(getDateDiffStr(new Date(birthd.getTime()), now, 'minutes', 2));
+        $('#age_seconds').html(getDateDiffStr(new Date(birthd.getTime()), now, 'seconds', 0));
+     }
+     var t = setInterval(update_age, 1000);
+  //]]>
+  </script>
+  </head>
+ <body>
+  <div class="block" style="padding: 0 10px; height: 250px; width: 300px;">
+   <h1>三﨑連仁</h1>
+   <span id="age">(calculating...)</span><br/>
+   <span id="age_years">(calculating...)</span><br/>
+   <span id="age_months">(calculating...)</span><br/>
+   <span id="age_weeks">(calculating...)</span><br/>
+   <span id="age_days">(calculating...)</span><br/>
+   <span id="age_hours">(calculating...)</span><br/>
+   <span id="age_minutes">(calculating...)</span><br/>
+   <span id="age_seconds">(calculating...)</span><br/>
+  </div>
+ </body>
+</html>

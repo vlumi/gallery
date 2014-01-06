@@ -1,0 +1,6 @@
+backup/
+*.jpg
+*.png
+*.gif
+*.db
+*~
