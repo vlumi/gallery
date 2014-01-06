@@ -2,7 +2,7 @@
 
 for i in full/*.jpg ; do
     fname=$(echo $i |sed s/^full.//)
-#    echo "Processing $fname"
+#    echo "Processing $fname ..."
     if [ ! -e thumbs/$fname ] ; then
         echo "Creating $fname"
         convert full/$fname -thumbnail 1500x1500 $fname
