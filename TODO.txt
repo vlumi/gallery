@@ -1,0 +1,8 @@
+- create thumbnails only (separate from pushing to db)
+- script for managing photos meta
+  - populate db from files in full/
+  - update meta from exif
+  - set meta
+- script for managing galleries
+  - add files
+  - remove files
