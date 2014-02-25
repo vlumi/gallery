@@ -46,7 +46,7 @@ countries = gallery.getCountries()
   <link rel="stylesheet" type="text/css" href="<%=cssfile%>"/>
   <link rel="stylesheet" type="text/css" href="css/colorbox.css"/>
   <link rel="stylesheet" type="text/css" href="css/flags.css"/><!-- from http://flag-sprites.com -->
-  <script type="text/javascript" src="js/jquery-1.7.1.min.js"></script>
+  <script type="text/javascript" src="js/jquery-1.11.0.min.js"></script>
 <!--  <script type="text/javascript" src="js/jquery.colorbox-min.js"></script>-->
   <script type="text/javascript" src="js/jquery.colorbox.js"></script>
   <script type="text/javascript" src="js/jquery.purl.js"></script>
@@ -95,7 +95,6 @@ stime[4] = stime[4] - 1; # adjust month
                }
             }
          },
-         reverseIndex: false,
          loop: false
       });<%
 if /^\d+$/.match(cgi['p']) then
