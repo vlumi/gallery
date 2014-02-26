@@ -1,11 +1,11 @@
-#!/usr/bin/ruby1.8
+#!/usr/bin/env ruby
 # encoding: utf-8
 
-load 'rb/test_gallery.rb'
+load 'rb/gallery.rb'
 
 filters = {}
-filters['gallery'] = 'lenkun1'
-gallery = Gallery::Gallery.new("test_lenkun.db", filters)
+filters['gallery'] = 'lenkun'
+gallery = Gallery::Gallery.new("gallery.db", filters)
 
 count = 0
 gallery.getYears().each do |y|

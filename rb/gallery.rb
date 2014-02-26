@@ -49,7 +49,8 @@ module Gallery
 	end # class Photo
 
 	class Gallery
-		attr_reader :total_count,
+		attr_reader :name, :title, :description, :epoch,
+        :total_count,
         :year_counts, :max_year_count, :year_avgs, :max_year_avg,
         :month_counts, :max_month_count, :month_avgs, :max_month_avg,
         :moy_counts, :max_moy_count, # Month of year
@@ -61,6 +62,8 @@ module Gallery
 		
 		def initialize(dbfile, filters = nil)
 			@photos = {}
+
+            @name, @title, @description, @epoch = '', '', '', ''
 			
 			@year_counts   = {}
 			@year_avgs     = {}
@@ -105,6 +108,17 @@ module Gallery
 			id = 0
 			database.transaction do |db|
   				db.results_as_hash = true
+                if gallery != nil then
+                    db.execute('SELECT name, title, description, epoch FROM galleries WHERE name=?', [gallery]) do |row|
+                        @name        = row['name']
+                        @title       = row['title']
+                        @description = row['description']
+                        @epoch = /^(\d\d\d\d)-(\d\d)-(\d\d)[ T](\d\d):(\d\d):(\d\d)/.match(row['epoch']).to_a.collect { |i| i.to_i  }
+                        if @epoch.kind_of?(Array) && @epoch.length == 7 then
+                            @epoch.shift
+                        end
+                    end
+                end
   				db.execute(sql, sql_filter_vals) do |row|
   					id += 1
   					_parse_row(row, id)

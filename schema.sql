@@ -1,7 +1,8 @@
 CREATE TABLE galleries (
   name        TEXT PRIMARY KEY,
   title       TEXT,
-  description TEXT
+  description TEXT,
+  epoch       TEXT
 );
 
 CREATE TABLE photos (
