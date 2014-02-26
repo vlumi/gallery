@@ -50,14 +50,14 @@ module Gallery
 
 	class Gallery
 		attr_reader :total_count,
-			:year_counts, :max_year_count, :year_avgs, :max_year_avg,
-			:month_counts, :max_month_count, :month_avgs, :max_month_avg,
-			:moy_counts, :max_moy_count, # Month of year
-			:dow_counts, :max_dow_count, # Day of week
-			:hod_counts, :max_hod_count, # Hour of day
-			:country_counts, :max_country_count,
-			:camera_counts, :max_camera_count,
-			:author_counts, :max_author_count
+        :year_counts, :max_year_count, :year_avgs, :max_year_avg,
+        :month_counts, :max_month_count, :month_avgs, :max_month_avg,
+        :moy_counts, :max_moy_count, # Month of year
+        :dow_counts, :max_dow_count, # Day of week
+        :hod_counts, :max_hod_count, # Hour of day
+        :country_counts, :max_country_count,
+        :camera_counts, :max_camera_count,
+        :author_counts, :max_author_count
 		
 		def initialize(dbfile, filters = nil)
 			@photos = {}
@@ -77,29 +77,29 @@ module Gallery
 			
 			sql_filters = []
 			sql_filter_vals = []
-          gallery = nil
+			gallery = nil
 			if filters != nil and filters.is_a?(Hash) then
-              if filters['gallery'] != nil then
-                gallery = filters['gallery']
-                sql_filters.push('photo_galleries.gallery_name=?')
-                sql_filter_vals.push(filters['gallery'])
-              end
-                ['country', 'camera', 'author'].each do |type|
-        			if filters[type] != nil then
-                        sql_filters.push(type + '=?')
-                        sql_filter_vals.push(filters[type])
-        			end
+                if filters['gallery'] != nil then
+                    gallery = filters['gallery']
+                    sql_filters.push('photo_galleries.gallery_name=?')
+                    sql_filter_vals.push(filters['gallery'])
                 end
+			    ['country', 'camera', 'author'].each do |type|
+					if filters[type] != nil then
+			            sql_filters.push(type + '=?')
+			            sql_filter_vals.push(filters[type])
+					end
+			    end
+			end
+            if gallery != nil then
+                sql = 'SELECT * FROM photos JOIN photo_galleries ON photo_galleries.photo_name=photos.name'
+            else
+                sql = 'SELECT * FROM photos'
             end
-          if gallery != nil then
-			sql = 'SELECT * FROM photos JOIN photo_galleries ON photo_galleries.photo_name=photos.name'
-          else
-			sql = 'SELECT * FROM photos'
-          end
-          if sql_filters.length > 0 then
-            sql = sql + ' WHERE ' + sql_filters.join(' AND ')
-          end
-          sql = sql + ' ORDER BY name'
+            if sql_filters.length > 0 then
+                sql = sql + ' WHERE ' + sql_filters.join(' AND ')
+            end
+            sql = sql + ' ORDER BY name'
 			
 			database = SQLite3::Database.new(dbfile);
 			id = 0
@@ -112,7 +112,7 @@ module Gallery
 			end
 			
 			@total_count = id
-          return if @total_count == 0
+            return if @total_count == 0
 			
 			# Get extremes, to calculate proper day counts.
 			min_year  = @photos.keys.min
@@ -170,18 +170,18 @@ module Gallery
 		
 		def _parse_row(row, id)
   			photo = Photo.new({
-  				':id'      => id,
-  				':file'    => row['name'],
-  				':title'   => row['title'],
-				':taken'   => row['taken'],
-				':author'  => row['author'],
-				':country' => row['country'],
-				
-				':width'    => row['width'].to_i,
-				':height'   => row['height'].to_i,
-				':t_width'  => row['t_width'].to_i,
-				':t_height' => row['t_height'].to_i,
-			})
+                                  ':id'      => id,
+                                  ':file'    => row['name'],
+                                  ':title'   => row['title'],
+                                  ':taken'   => row['taken'],
+                                  ':author'  => row['author'],
+                                  ':country' => row['country'],
+                                  
+                                  ':width'    => row['width'].to_i,
+                                  ':height'   => row['height'].to_i,
+                                  ':t_width'  => row['t_width'].to_i,
+                                  ':t_height' => row['t_height'].to_i,
+                              })
 			ts = photo.timestamp
 			y, m, d, h, dow = ts.year, ts.month, ts.day, ts.hour, ts.wday
 			
