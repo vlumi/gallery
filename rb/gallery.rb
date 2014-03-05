@@ -68,7 +68,7 @@ module Gallery
     def initialize(dbfile, filters = nil)
       @photos = {}
 
-      @name, @title, @description, @epoch = '', '', '', ''
+      @name, @title, @description, @epoch = '', '', '', []
 
       @year_counts   = {}
       @year_avgs     = {}

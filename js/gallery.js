@@ -43,15 +43,15 @@ function show_month(id) {
 		}
 		
 		$("#" + id + " a.photo").each(function(i) {
-			var imgsrc = $(this).attr("href");
+			var imgsrc = $(this).attr("href").replace(/^i[/]/,"");
 			$(this).find("span.photo").css("background-image", "url('thumbs/" + imgsrc + "')")
 		});
 		$("#" + id +" .block h3").each(function(i) {
 			var date_parts = /^d(\d\d\d\d)-(\d\d)-(\d\d)$/.exec($(this).attr("id"));
 			if (date_parts.length > 0) {
 				var cmpd = new Date(Date.UTC(parseInt(date_parts[1], 10), parseInt(date_parts[2], 10) - 1, parseInt(date_parts[3], 10), 23, 59, 59));
-				$(this).attr("title", getDateDiffStr(epochd, cmpd, "date"));
-				$(this).find("span.age").html(getDateDiffStr(epochd, cmpd, "date_short"));
+				if (show_age) $(this).attr("title", getDateDiffStr(epochd, cmpd, "date"));
+				if (show_age) $(this).find("span.age").html(getDateDiffStr(epochd, cmpd, "date_short"));
 			}
 		});
 		
