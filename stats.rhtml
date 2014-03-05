@@ -3,17 +3,10 @@ require 'cgi'
 require 'sqlite3'
 
 cgi = CGI.new
-test_mode = (cgi.script_name == '/test_stats.rhtml')
 
-if test_mode then
-    load 'rb/test_gallery.rb'
-    dbfile = 'test_lenkun.db'
-else
-    load 'rb/gallery.rb'
-    dbfile = 'lenkun.db'
-end
+load 'rb/gallery.rb'
 
-gallery = Gallery::Gallery.new(dbfile, {})
+gallery = Gallery::Gallery.new('gallery.db', {})
 
 @dow = ['日','月','火','水','木','金','土']
 
