@@ -22,20 +22,14 @@ end
 
 puts "Total count: #{count}"
 puts
+puts "Galleries:"
+p gallery.getGalleries()
+puts
 puts "Countries:"
-countries = gallery.getCountries()
-countries.keys.each do |c|
-  puts " - #{c} = #{countries[c]}"
-end
+p gallery.getCountries()
 puts
 puts "Cameras:"
-cameras = gallery.getCameras()
-cameras.each do |c|
-  puts " - #{c}"
-end
+p gallery.getCameras()
 puts
 puts "Authors:"
-authors = gallery.getAuthors()
-authors.each do |c|
-  puts " - #{c}"
-end
+p gallery.getAuthors()

@@ -60,6 +60,11 @@ module Gallery
       :camera_counts, :max_camera_count,
       :author_counts, :max_author_count
 
+    # filters may be used to restrict to only matching photos:
+    #  - gallery : name of the gallery
+    #  - country : country code
+    #  - camera  : camera model, as in the database
+    #  - author  : name of the author
     def initialize(dbfile, filters = nil)
       @photos = {}
 
@@ -108,8 +113,11 @@ module Gallery
       id = 0
       database.transaction do |db|
         db.results_as_hash = true
-        if gallery != nil then
-          db.execute('SELECT name, title, description, epoch FROM galleries WHERE name=?', [gallery]) do |row|
+
+        @galleries = []
+        db.execute('SELECT name, title, description, epoch FROM galleries ORDER BY name') do |row|
+          @galleries << row['name']
+          if gallery != nil and row['name'] == gallery then
             @name        = row['name']
             @title       = row['title']
             @description = row['description']
@@ -119,6 +127,7 @@ module Gallery
             end
           end
         end
+
         db.execute(sql, sql_filter_vals) do |row|
           id += 1
           _parse_row(row, id)
@@ -277,6 +286,11 @@ module Gallery
         []
       end
     end # def getPhotos()
+
+
+    def getGalleries()
+      @galleries
+    end
 
     def getCountries()
       countries = {}
