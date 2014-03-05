@@ -50,8 +50,8 @@ function show_month(id) {
 			var date_parts = /^d(\d\d\d\d)-(\d\d)-(\d\d)$/.exec($(this).attr("id"));
 			if (date_parts.length > 0) {
 				var cmpd = new Date(Date.UTC(parseInt(date_parts[1], 10), parseInt(date_parts[2], 10) - 1, parseInt(date_parts[3], 10), 23, 59, 59));
-				$(this).attr("title", getDateDiffStr(birthd, cmpd, "date"));
-				$(this).find("span.age").html(getDateDiffStr(birthd, cmpd, "date_short"));
+				$(this).attr("title", getDateDiffStr(epochd, cmpd, "date"));
+				$(this).find("span.age").html(getDateDiffStr(epochd, cmpd, "date_short"));
 			}
 		});
 		

@@ -1,41 +1,35 @@
-#!/usr/bin/ruby1.8
+#!/usr/bin/env ruby
 # encoding: utf-8
 
-load 'rb/test_gallery.rb'
+load 'rb/gallery.rb'
 
 filters = {}
-filters['gallery'] = 'lenkun1'
-gallery = Gallery::Gallery.new("test_lenkun.db", filters)
+filters['gallery'] = 'lenkun'
+gallery = Gallery::Gallery.new("gallery.db", filters)
 
 count = 0
 gallery.getYears().each do |y|
-	puts y
-	gallery.getMonths(y).each do |m|
-		puts " - #{m}"
-		gallery.getDays(y, m).each do |d|
-			print "   - #{d}: #{gallery.getPhotos(y, m, d).length}; "
-			count = count + gallery.getPhotos(y, m, d).length
-			puts gallery.getPhotos(y, m, d).join(', ')
-		end
-	end
+  puts y
+  gallery.getMonths(y).each do |m|
+    puts " - #{m}"
+    gallery.getDays(y, m).each do |d|
+      print "   - #{d}: #{gallery.getPhotos(y, m, d).length}; "
+      count = count + gallery.getPhotos(y, m, d).length
+      puts gallery.getPhotos(y, m, d).join(', ')
+    end
+  end
 end
 
 puts "Total count: #{count}"
 puts
+puts "Galleries:"
+p gallery.getGalleries()
+puts
 puts "Countries:"
-countries = gallery.getCountries()
-countries.keys.each do |c|
-	puts " - #{c} = #{countries[c]}"
-end
+p gallery.getCountries()
 puts
 puts "Cameras:"
-cameras = gallery.getCameras()
-cameras.each do |c|
-	puts " - #{c}"
-end
+p gallery.getCameras()
 puts
 puts "Authors:"
-authors = gallery.getAuthors()
-authors.each do |c|
-	puts " - #{c}"
-end
+p gallery.getAuthors()

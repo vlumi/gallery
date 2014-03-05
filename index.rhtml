@@ -3,19 +3,8 @@ require 'cgi'
 require 'sqlite3'
 
 cgi = CGI.new
-test_mode = (cgi.script_name == '/test_index.rhtml')
 
-if test_mode then
-	load 'rb/test_gallery.rb'
-	dbfile = 'test_lenkun.db'
-	cssfile = 'css/test_gallery.css'
-	jsfile = 'js/test_gallery.js'
-else
-	load 'rb/gallery.rb'
-	dbfile = 'lenkun.db'
-	cssfile = 'css/gallery.css'
-	jsfile = 'js/gallery.js'
-end
+load 'rb/gallery.rb'
 
 filters = {}
 #filters['gallery'] = 'lenkun'
@@ -29,7 +18,7 @@ end
 if cgi.has_key?('author') and cgi['author'].length > 0 then
     filters['author'] = cgi['author']
 end
-gallery = Gallery::Gallery.new(dbfile, filters)
+gallery = Gallery::Gallery.new('gallery.db', filters)
 countries = gallery.getCountries()
 
 @dow = ['日','月','火','水','木','金','土']
@@ -42,28 +31,30 @@ countries = gallery.getCountries()
   <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
   <meta name="author" content="Ville Misaki"/>
   <meta name="copyright" content="Ville Misaki"/>
-  <title>Lenni</title>
-  <link rel="stylesheet" type="text/css" href="<%=cssfile%>"/>
+  <title><%= gallery.title %></title>
+  <link rel="stylesheet" type="text/css" href="css/gallery.css"/>
   <link rel="stylesheet" type="text/css" href="css/colorbox.css"/>
   <link rel="stylesheet" type="text/css" href="css/flags.css"/><!-- from http://flag-sprites.com -->
-  <script type="text/javascript" src="js/jquery-1.7.1.min.js"></script>
+  <script type="text/javascript" src="js/jquery-1.11.0.min.js"></script>
 <!--  <script type="text/javascript" src="js/jquery.colorbox-min.js"></script>-->
   <script type="text/javascript" src="js/jquery.colorbox.js"></script>
   <script type="text/javascript" src="js/jquery.purl.js"></script>
-  <script type="text/javascript" src="<%=jsfile%>"></script>
+  <script type="text/javascript" src="js/gallery.js"></script>
   <script type="text/javascript" src="js/age.js"></script>
   <script type="text/javascript">//<![CDATA[<%
 stime = Time.new.utc.to_a;
 stime[4] = stime[4] - 1; # adjust month
+etime = gallery.epoch
+etime[1] = etime[1] - 1; # adjust month
 %>
    // Adjust to use the server time for the comparison.
    var serverd = new Date(Date.UTC(<%=stime[5]%>, <%=stime[4]%>, <%=stime[3]%>, <%=stime[2]%>, <%=stime[1]%>, <%=stime[0]%>));
    var offset = serverd - new Date();
-   // Birthday in UTC
-   var birthd = new Date(Date.UTC(2013, 11, 4, 12, 46, 0));
+   // Epoch in UTC
+   var epochd = new Date(Date.UTC(<%=etime[0]%>, <%=etime[1]%>, <%=etime[2]%>, <%=etime[3]%>, <%=etime[4]%>, <%=etime[5]%>));
    function update_age() {
       var now = new Date(new Date().getTime() + offset);
-      $('#age').html(getDateDiffStr(birthd, now, 'date'));
+      $('#age').html(getDateDiffStr(epochd, now, 'date'));
    }
    // Updating once a minute should be OK.
    var t = setInterval(update_age, 60000);
@@ -88,14 +79,13 @@ stime[4] = stime[4] - 1; # adjust month
             if (history != null && typeof history.pushState == 'function') {
                var filters = get_url_filters();
                if (is_last_month()) {
-                  history.pushState(null, 'Lenni', window.location.pathname + (filters.length > 0 ? '?' + filters : ''));
+                  history.pushState(null, '<%= gallery.title %>', window.location.pathname + (filters.length > 0 ? '?' + filters : ''));
                }
                else {
-                  history.pushState(null, 'Lenni', window.location.pathname + '?m=' + get_curr_month() + (filters.length > 0 ? '&' + filters : ''));
+                  history.pushState(null, '<%= gallery.title %>', window.location.pathname + '?m=' + get_curr_month() + (filters.length > 0 ? '&' + filters : ''));
                }
             }
          },
-         reverseIndex: false,
          loop: false
       });<%
 if /^\d+$/.match(cgi['p']) then
@@ -116,7 +106,7 @@ end
   </script>
  </head>
  <body>
-  <h1 title="Lenni Misaki">三﨑蓮仁</h1>
+  <h1><%= gallery.title %></h1>
   <h2 class="month_nav">
    <span class="nav first" title="First month"><a href="#" onclick="return show_month('first');">|&lt;&lt;</a></span>
    <span class="nav prev"><a href="#" onclick="return show_prev_month();">&lt;&lt;</a></span>
@@ -130,14 +120,14 @@ gallery.getYears().each do |y|
   gallery.getMonths(y).each do |m|
     month_id = sprintf("%04d-%02d", y, m)
 %>
-   <div class="month_block" id="m<%=month_id%>" title="<%=month_id%>" style="display: none;">
+   <div class="month_block" id="m<%=month_id %>" title="<%= month_id %>" style="display: none;">
 <%
     gallery.getDays(y, m).each do |d|
       date = Date.new(y, m, d)
       day_id = sprintf("%04d-%02d-%02d", y, m, d)
 %>
     <div class="block">
-     <h3 id="d<%=day_id%>"><%=date.mday%><span class="dow"><%=@dow[date.wday]%></span><span class="age"></span></h3><%
+     <h3 id="d<%= day_id %>"><%=date.mday%><span class="dow"><%=@dow[date.wday]%></span><span class="age"></span></h3><%
       is_first_of_date = true
       gallery.getPhotos(y, m, d).each do |photo|
         if not is_first_of_date then

@@ -13,10 +13,10 @@
 //     $(document).ready(function() {
 //        update_age();
 //     });
-//     // Birthday "2012-01-06T02:52:00+02 in UTC
-//     var birthd = new Date(Date.UTC(2012, 0, 6, 0, 52, 0));
+//     // Epoch "2012-01-06T02:52:00+02 in UTC
+//     var epochd = new Date(Date.UTC(2012, 0, 6, 0, 52, 0));
 //     function update_age() {
-//         $('#age').html(getDateDiffStr(new Date(birthd.getTime()), new Date(), false));
+//         $('#age').html(getDateDiffStr(new Date(epochd.getTime()), new Date(), false));
 //     }
 //     var t = setInterval(update_age, 1000); // Update once a second
 // ...
