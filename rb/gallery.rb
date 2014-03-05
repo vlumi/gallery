@@ -61,10 +61,10 @@ module Gallery
       :author_counts, :max_author_count
 
     # filters may be used to restrict to only matching photos:
-    #  - gallery : name of the gallery
-    #  - country : country code
-    #  - camera  : camera model, as in the database
-    #  - author  : name of the author
+    #  - gallery: name of the gallery
+    #  - country: country code
+    #  - camera:  camera model, as in the database
+    #  - author:  name of the author
     def initialize(dbfile, filters = nil)
       @photos = {}
 
@@ -87,14 +87,14 @@ module Gallery
       sql_filter_vals = []
       gallery = nil
       if filters != nil and filters.is_a?(Hash) then
-        if filters['gallery'] != nil then
-          gallery = filters['gallery']
+        if filters[:gallery] != nil then
+          gallery = filters[:gallery]
           sql_filters.push('photo_galleries.gallery_name=?')
-          sql_filter_vals.push(filters['gallery'])
+          sql_filter_vals.push(filters[:gallery])
         end
-        ['country', 'camera', 'author'].each do |type|
+        [:country, :camera, :author].each do |type|
           if filters[type] != nil then
-            sql_filters.push(type + '=?')
+            sql_filters.push(type.to_s + '=?')
             sql_filter_vals.push(filters[type])
           end
         end

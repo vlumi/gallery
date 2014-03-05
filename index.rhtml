@@ -7,16 +7,16 @@ cgi = CGI.new
 load 'rb/gallery.rb'
 
 filters = {}
-#filters['gallery'] = 'lenkun'
+filters[:gallery] = 'lenkun'
 #filters['gallery'] = nil
-if cgi.has_key?('country') and cgi['country'].length > 0 then
-    filters['country'] = cgi['country']
+if cgi.has_key?('country') && cgi['country'].length > 0 then
+    filters[:country] = cgi['country']
 end
-if cgi.has_key?('camera') and cgi['camera'].length > 0 then
-    filters['camera'] = cgi['camera']
+if cgi.has_key?('camera') && cgi['camera'].length > 0 then
+    filters[:camera] = cgi['camera']
 end
-if cgi.has_key?('author') and cgi['author'].length > 0 then
-    filters['author'] = cgi['author']
+if cgi.has_key?('author') && cgi['author'].length > 0 then
+    filters[:author] = cgi['author']
 end
 gallery = Gallery::Gallery.new('gallery.db', filters)
 countries = gallery.getCountries()
@@ -45,7 +45,7 @@ countries = gallery.getCountries()
     var show_age = false;
 <%
 etime = gallery.epoch
-if etime != nil and etime.kind_of?(Array) and etime.length >= 6 then
+if etime != nil && etime.kind_of?(Array) && etime.length >= 6 then
   etime[1] = etime[1] - 1; # adjust month
 
   stime = Time.new.utc.to_a;
