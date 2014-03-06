@@ -1,6 +1,8 @@
 #!/usr/bin/ruby
 # encoding: utf-8
 
+# Copyright 2014 Ville Misaki
+
 require 'sqlite3'
 
 module Gallery
