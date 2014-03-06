@@ -1,8 +1,4 @@
-- create thumbnails only (separate from pushing to db)
-- script for managing photos meta
-  - populate db from files in full/
-  - update meta from exif
-  - set meta
+- craete thumbnails from admin.rb
 - script for managing galleries
   - add files
   - remove files
