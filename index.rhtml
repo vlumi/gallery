@@ -147,7 +147,7 @@ gallery.getYears().each do |y|
         title = photo.taken + (photo.title.length > 0 ? " / " + photo.title : "");
         copyright = photo.author ? 'Copyright © ' + photo.author + '. All rights reserved.' : ''
 %>
-     <a class="photo" id="i<%=photo.id%>" href="<%=photo.file%>" title="<%=title%>">
+     <a class="photo" id="i<%=photo.id%>" href="i/<%=photo.file%>" title="<%=title%>">
       <span class="copyright"><%=copyright%></span>
       <span class="photo" style="width: <%=photo.t_width + 10%>px; height: <%=photo.t_height + 10%>px">
        <span class="flag_container"><img src="css/blank.gif" class="flag flag-<%=photo.country%>" alt="<%=photo.country%>" title="<%=countries[photo.country]%>"></span>
