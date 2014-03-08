@@ -5,7 +5,8 @@
 #
 # Usage: ./admin.rb [command] [options] [photo(s)]
 #
-#
+# See the help contained in the OptionParser object for more information
+# on the parameters, or run without parameters to see it.
 #
 # Copyright 2014 Ville Misaki <ville@misaki.fi>
 
@@ -36,8 +37,7 @@ require 'RMagick'
   simulate:  false,
   help:      false,
 
-  opts: nil,
-
+  # Schema for processing.
   fields: {
     galleries: %w{ name title description epoch },
     photos: {
@@ -56,10 +56,10 @@ require 'RMagick'
 
 def main
 
-  parse_params(@conf)
+  opts = parse_params(@conf)
 
-  unless %w{ add update rm show g-add g-update g-rm g-show g-ls to-g from-g }.include? @conf[:cmd] then
-    puts @conf[:opts]
+  if @conf[:help] || ! %w{ add update rm show g-add g-update g-rm g-show g-ls to-g from-g }.include?(@conf[:cmd]) then
+    puts opts
     exit
   end
 
@@ -159,7 +159,7 @@ def main
 end # main
 
 def parse_params(conf)
-  conf[:opts] = OptionParser.new do |o|
+  opts = OptionParser.new do |o|
     o.banner = "Usage: ./admin.rb [command] [options] [photo(s)]"
     o.separator ""
     o.separator "Commands:"
@@ -207,6 +207,8 @@ def parse_params(conf)
   conf[:cmd] = ARGV.shift
   conf[:photos] = ARGV
   conf[:all_photos] = false
+
+  opts
 end
 
 def init_db(dbfile)
@@ -394,6 +396,7 @@ def update_photo_meta(opts)
 
     unless @conf[:exifonly]
       begin
+        puts "#{photo}"
         fields[:user].each do |field|
           data[field.to_sym] = prompt_field field: field, default: old_data[photo][field]
         end
