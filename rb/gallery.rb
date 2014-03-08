@@ -98,12 +98,12 @@ module Gallery
         if filters[:gallery] != nil then
           gallery = filters[:gallery]
           sql_filters.push('photo_galleries.gallery_name=?')
-          sql_filter_vals.push(filters[:gallery])
+          sql_filter_vals << filters[:gallery]
         end
         [:country, :camera, :author].each do |type|
           if filters[type] != nil then
             sql_filters.push(type.to_s + '=?')
-            sql_filter_vals.push(filters[type])
+            sql_filter_vals << filters[type]
           end
         end
       end
