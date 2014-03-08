@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 # encoding: utf-8
 
-# Copyright 2014 Ville Misaki
+# Copyright 2014 Ville Misaki <ville@misaki.fi>
 
 require 'sqlite3'
 
