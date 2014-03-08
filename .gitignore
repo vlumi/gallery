@@ -1,6 +1,6 @@
 backup/
 *.jpg
 *.db
-*.sqlite3
+*.sqlite3*
 *~
 \#*
