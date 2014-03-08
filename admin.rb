@@ -85,21 +85,24 @@ def main
       # Photos that were explicitly selected and are in the db.
       curr_photos = @conf[:photos] & photos_db.keys
 
-      case @conf[:cmd]
-
-      when "add" then
+      photos_disk = {}
+      if %w{ add update }.include? @conf[:cmd] then
         # Collect information about the photos on the disk.
-        photos_disk = {}
         @conf[:photos].each do |f|
           photos_disk[f] = EXIFR::JPEG.new('full/' + f).to_hash
         end
         missing_photos = @conf[:photos] & (photos_db.keys - photos_disk.keys)
-        new_photos = @conf[:photos] & (photos_disk.keys - photos_db.keys)
 
         if missing_photos.length > 0 then
           puts "The following photos found in the database were not found on disk:"
           puts missing_photos.collect{ |f| " - #{f}\n" }
         end
+      end
+
+      case @conf[:cmd]
+        
+      when "add" then
+        new_photos = @conf[:photos] & (photos_disk.keys - photos_db.keys)
 
         insert_new_photos db: db, photos: new_photos, fields: @conf[:fields][:photos], exif: photos_disk
 
@@ -283,7 +286,7 @@ def insert_new_photos(opts)
   photos.each do |photo|
     data = {
       name:  photo,
-      taken: exif[photo][:date_time_original].to_s,
+      taken: '',
 
       title:       '',
       description: '',
@@ -325,26 +328,15 @@ def insert_new_photos(opts)
 
     puts data if @conf[:debug]
 
-    need_thumbs = false
-    @conf[:thumbnails].each do |k,v|
-      unless File.exist? "#{k.to_s}/#{photo}" then
-        need_thumbs = true
-        break
-      end
-    end
-
-    if need_thumbs then
-      img_full = Magick::Image::read("full/#{photo}").first
-
-      @conf[:thumbnails].each do |k,v|
-        unless File.exist? "#{k.to_s}/#{photo}" then
-          puts "Creating thumbnail #{v[:width]}x#{v[:height]}"
-          img_thumb = img_full.resize_to_fit(v[:width], v[:height])
-          img_thumb.write("#{k.to_s}/#{photo}") unless @conf[:simulate]
-        end
-      end
-    end
+    create_thumbs(photo: photo)
     
+    Magick::ImageList.new("i/#{photo}").each do |img|
+      data[:width], data[:height] = img.columns, img.rows
+    end
+    Magick::ImageList.new("thumbs/#{photo}").each do |img|
+      data[:t_width], data[:t_height] = img.columns, img.rows
+    end
+
     data_ins_photos = fields[:db].collect{ |f| data[f.to_sym] }
 
     puts "Inserting photo #{photo} into the database." if @conf[:verbose]
@@ -367,7 +359,7 @@ def update_photo_meta(opts)
   photos.each do |photo|
     data = {
       name:  photo,
-      taken: exif[photo][:date_time_original].to_s,
+      taken: '',
 
       #      title:       old_data[photo]['title'],
       #      description: old_data[photo]['description'],
@@ -415,6 +407,8 @@ def update_photo_meta(opts)
 
     puts data if @conf[:debug]
 
+    create_thumbs(photo: photo)
+    
     Magick::ImageList.new("i/#{photo}").each do |img|
       data[:width], data[:height] = img.columns, img.rows
     end
@@ -653,6 +647,33 @@ def remove_photos_from_galleries(opts)
   end
 end
 
+def create_thumbs(opts)
+  photo = opts[:photo]
+
+  need_thumbs = false
+  @conf[:thumbnails].each do |k,v|
+    unless File.exist? "#{k.to_s}/#{photo}" then
+      need_thumbs = true
+      break
+    end
+  end
+
+  if need_thumbs then
+    img_full = Magick::Image::read("full/#{photo}").first
+
+    @conf[:thumbnails].each do |k,v|
+      unless File.exist? "#{k.to_s}/#{photo}" then
+        puts "Creating thumbnail #{v[:width]}x#{v[:height]} for photo #{photo}" if @conf[:verbose]
+
+        filename  = "#{k.to_s}/#{photo}"
+        img_thumb = img_full.resize_to_fit(v[:width], v[:height])
+        img_thumb.write(filename) unless @conf[:simulate]
+        File.chmod(0644, filename)
+      end
+    end
+  end
+end
+
 def prompt_field(opts)
   field   = opts[:field]
   default = opts[:default] || ''
@@ -682,6 +703,8 @@ end
 
 def parse_exif(data, exif)
   {
+    taken: exif[:date_time_original].to_s,
+    
     camera:  camera_name_from_exif(exif),
     focal:   exif[:focal_length].round,
     fstop:   exif[:aperture_value],
