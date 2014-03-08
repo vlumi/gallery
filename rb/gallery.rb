@@ -102,7 +102,7 @@ module Gallery
         end
         [:country, :camera, :author].each do |type|
           if filters[type] != nil then
-            sql_filters.push(type.to_s + '=?')
+            sql_filters.push(type.to_s + ' LIKE ?')
             sql_filter_vals << filters[type]
           end
         end
@@ -121,6 +121,7 @@ module Gallery
       id = 0
       database.transaction do |db|
         db.results_as_hash = true
+        db.type_translation = true
 
         @galleries = []
         db.execute('SELECT name, title, description, epoch FROM galleries ORDER BY name') do |row|
