@@ -15,8 +15,14 @@ require 'sqlite3'
 require 'RMagick'
 
 @conf = {
+  # Static configuration.
   dbfile: 'gallery.sqlite3',
+  thumbnails: {
+    i:      { width: 1500, height: 1500 },
+    thumbs: { width:  600, height:  200 },
+  },
 
+  # From data and arguments.
   cmd: '',
 
   galleries:  [],
@@ -37,7 +43,7 @@ def main
 
   parse_params(@conf)
 
-  unless %w{add update rm show g-add g-show g-rm g-show g-ls to-g from-g}.include? @conf[:cmd] then
+  unless %w{ add update rm show g-add g-update g-rm g-show g-ls to-g from-g }.include? @conf[:cmd] then
     puts @conf[:opts]
     exit
   end
@@ -46,7 +52,7 @@ def main
     @conf[:all_photos] = true
     @conf[:photos] = Dir["full/*.jpg"].sort
   end
-  @conf[:photos] = @conf[:photos].collect { |f| File.basename(f) }
+  @conf[:photos] = @conf[:photos].collect{ |f| File.basename(f) }
 
   database = init_db @conf[:dbfile]
   database.transaction do |db|
@@ -86,7 +92,7 @@ def main
 
         if missing_photos.length > 0 then
           puts "The following photos found in the database were not found on disk:"
-          puts missing_photos.collect { |f| " - #{f}\n"  }
+          puts missing_photos.collect{ |f| " - #{f}\n" }
         end
 
         insert_new_photos db: db, photos: new_photos, fields: fields, exif: photos_disk
@@ -113,6 +119,8 @@ def main
       # Gallery commands.
       if @conf[:cmd] == "g-add" then
         create_gallery db: db
+      elsif @conf[:cmd] == "g-update" then
+        update_galleries db: db, galleries: @conf[:galleries]
       elsif @conf[:cmd] == "g-show" then
         show_galleries db: db, galleries: @conf[:galleries]
       elsif @conf[:cmd] == "g-ls" then
@@ -214,7 +222,7 @@ def init_db(dbfile)
     end
   else
     schema_ddls = Dir["schema_to_*.ddl"]
-    schema_versions = schema_ddls.collect { |f| f.scan(/\d+/).first.to_i }.find_all { |v| v > schema_version }.sort
+    schema_versions = schema_ddls.collect{ |f| f.scan(/\d+/).first.to_i }.find_all{ |v| v > schema_version }.sort
 
     begin
       database.transaction do |db|
@@ -242,7 +250,7 @@ def insert_new_photos(opts)
 
   return if photos.length == 0
 
-  sql_ins_photos  = "INSERT INTO photos (" + fields[:photos][:db].join(',') + ") VALUES (" + fields[:photos][:db].collect { |f| '?'}.join(',') + ")"
+  sql_ins_photos  = "INSERT INTO photos (" + fields[:photos][:db].join(',') + ") VALUES (" + fields[:photos][:db].collect{ |f| '?'}.join(',') + ")"
   stmt_ins_photos = db.prepare(sql_ins_photos)
 
   # TODO: from the last photo in the database, or the previous session..?
@@ -300,15 +308,27 @@ def insert_new_photos(opts)
 
     puts data if @conf[:debug]
 
-    # FIXME: check/create thumbnails
-    #      Magick::ImageList.new("i/#{photo}").each do |img|
-    #        data[:width], data[:height] = img.columns, img.rows
-    #      end
-    #      Magick::ImageList.new("thumbs/#{photo}").each do |img|
-    #        data[:t_width], data[:t_height] = img.columns, img.rows
-    #      end
+    need_thumbs = false
+    @conf[:thumbnails].each do |k,v|
+      unless File.exist? "#{k.to_s}/#{photo}" then
+        need_thumbs = true
+        break
+      end
+    end
 
-    data_ins_photos = fields[:photos][:db].collect { |f| data[f.to_sym] }
+    if need_thumbs then
+      img_full = Magick::Image::read("full/#{photo}").first
+
+      @conf[:thumbnails].each do |k,v|
+        unless File.exist? "#{k.to_s}/#{photo}" then
+          puts "Creating thumbnail #{v[:width]}x#{v[:height]}"
+          img_thumb = img_full.resize_to_fit(v[:width], v[:height])
+          img_thumb.write("#{k.to_s}/#{photo}") unless @conf[:simulate]
+        end
+      end
+    end
+    
+    data_ins_photos = fields[:photos][:db].collect{ |f| data[f.to_sym] }
 
     puts "Inserting photo #{photo} into the database." if @conf[:verbose]
     stmt_ins_photos.execute(*data_ins_photos) unless @conf[:simulate]
@@ -324,7 +344,7 @@ def update_photo_meta(opts)
   exif     = opts[:exif]
   old_data = opts[:old_data]
 
-  sql_upd_photos  = "UPDATE photos SET " + fields[:photos][:db].collect { |field| field + '=?'  }.join(',') + " WHERE name=?"
+  sql_upd_photos  = "UPDATE photos SET " + fields[:photos][:db].collect{ |field| field + '=?'  }.join(',') + " WHERE name=?"
   stmt_upd_photos = db.prepare(sql_upd_photos)
 
   photos.each do |photo|
@@ -385,7 +405,7 @@ def update_photo_meta(opts)
       data[:t_width], data[:t_height] = img.columns, img.rows
     end
 
-    data_upd_photos = fields[:photos][:db].collect { |field| data[field.to_sym].to_s }
+    data_upd_photos = fields[:photos][:db].collect{ |field| data[field.to_sym].to_s }
 
     puts "Updating properties for photo #{photo} in the database." if @conf[:verbose]
     stmt_upd_photos.execute(*data_upd_photos, photo) unless @conf[:simulate]
@@ -419,7 +439,7 @@ def show_photos(opts)
   if galleries.length > 0 then
     gphotos = []
 
-    sql_sel_gphotos = "SELECT DISTINCT photo_name FROM photo_galleries WHERE gallery_name IN (" + galleries.collect { |g| '?' }.join(',') + ")"
+    sql_sel_gphotos = "SELECT DISTINCT photo_name FROM photo_galleries WHERE gallery_name IN (" + galleries.collect{ |g| '?' }.join(',') + ")"
     db.execute(sql_sel_gphotos, *galleries) do |row|
       gphotos << row['photo_name']
     end
@@ -444,11 +464,10 @@ end
 
 def create_gallery(opts)
   db       = opts[:db]
-  gallery  = opts[:gallery]
 
   fields = %w{ name title description epoch }
 
-  sql_ins_gallery  = "INSERT INTO galleries (" + fields.join(',') + ") VALUES (" + fields.collect { |f| '?' }.join(',')  + ")"
+  sql_ins_gallery  = "INSERT INTO galleries (" + fields.join(',') + ") VALUES (" + fields.collect{ |f| '?' }.join(',')  + ")"
   stmt_ins_gallery = db.prepare(sql_ins_gallery)
 
   data = {}
@@ -458,10 +477,50 @@ def create_gallery(opts)
   end
 
   puts "Creating a new gallery #{data[:name]} into the database." if @verbose
-  values = fields.collect { |f| data[f.to_sym] }
+  values = fields.collect{ |f| data[f.to_sym] }
   stmt_ins_gallery.execute(*values) unless @conf[:simulate]
 
   puts "Gallery #{data[:name]} created."
+end
+
+def update_galleries(opts)
+  db        = opts[:db]
+  galleries = opts[:galleries]
+
+  fields = %w{ name title description epoch }
+
+  # Load previous values to use as default on the prompt.
+  gallery_data = {}
+  sql_sel_galleries = "SELECT " + fields.join(',') + " FROM galleries WHERE name IN (" + galleries.collect{ |g| '?' }.join(',') + ")"
+  db.execute(sql_sel_galleries, *galleries) do |row|
+    name = row['name']
+    gallery_data[name] = {}
+    fields.each do |field|
+      gallery_data[name][field.to_sym] = row[field]
+    end
+  end
+
+  sql_upd_gallery  = "UPDATE galleries SET " + fields.collect{ |f| "#{f}=?" }.join(',') + " WHERE name=?"
+  stmt_upd_gallery = db.prepare(sql_upd_gallery)
+
+  galleries.each do |gallery|
+    data = {}
+    puts "Updating gallery #{gallery}:"
+    fields.each do |field|
+      data[field.to_sym] = prompt_field field: field, default: gallery_data[gallery][field.to_sym]
+    end
+
+    puts "Updating gallery #{gallery} in the database." if @verbose
+    values = fields.collect{ |f| data[f.to_sym] }
+    stmt_upd_gallery.execute(*values, gallery) unless @conf[:simulate]
+
+    if gallery == data[:name] then
+      puts "Gallery #{data[:name]} updated."
+    else
+      puts "Gallery #{gallery} => #{data[:name]} updated."
+    end
+  end
+
 end
 
 def show_galleries(opts)
@@ -470,7 +529,7 @@ def show_galleries(opts)
 
   sql_sel_galleries = "SELECT name, title, description, epoch FROM galleries"
   if galleries.length > 0 then
-    sql_sel_galleries += " WHERE name IN (" + galleries.collect { |g| '?' }.join(',') + ")"
+    sql_sel_galleries += " WHERE name IN (" + galleries.collect{ |g| '?' }.join(',') + ")"
   end
   sql_sel_galleries += " ORDER BY LOWER(name)"
   db.execute(sql_sel_galleries, *galleries) do |row|
@@ -551,7 +610,7 @@ def prompt_field(opts)
   else
     print "]: "
   end
-  val = $stdin.gets
+  val = $stdin.gets.chomp
 
   case val
   when '-' then ''
