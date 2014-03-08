@@ -37,6 +37,21 @@ require 'RMagick'
   help:      false,
 
   opts: nil,
+
+  fields: {
+    galleries: %w{ name title description epoch },
+    photos: {
+      user: %w{ title description country place author },
+      db: %w{
+        name taken
+        title description country place author
+        camera fstop shutter iso
+        width height t_width t_height f_width f_height
+      },
+    },
+    photo_galleries: %w{ photo_name gallery_name },
+  },
+
 }
 
 def main
@@ -61,27 +76,18 @@ def main
 
     if %w{add update rm show to-g from-g}.include? @conf[:cmd] then
       # Photo commands.
-      fields = {
-        photos: {
-          user: %w{ title description country place author },
-          db: %w{
-            name taken
-            title description country place author
-            camera fstop shutter iso
-            width height t_width t_height f_width f_height
-          },
-        },
-      }
 
       photos_db = {}
-      db.execute("SELECT #{fields[:photos][:db].join(',')} FROM photos") do |row|
+      db.execute("SELECT " + @conf[:fields][:photos][:db].join(',') + " FROM photos") do |row|
         photos_db[ row['name'] ] = row
       end
 
       # Photos that were explicitly selected and are in the db.
       curr_photos = @conf[:photos] & photos_db.keys
 
-      if @conf[:cmd] == "add" then
+      case @conf[:cmd]
+
+      when "add" then
         # Collect information about the photos on the disk.
         photos_disk = {}
         @conf[:photos].each do |f|
@@ -95,37 +101,48 @@ def main
           puts missing_photos.collect{ |f| " - #{f}\n" }
         end
 
-        insert_new_photos db: db, photos: new_photos, fields: fields, exif: photos_disk
-      elsif @conf[:cmd] == "update" then
-        update_photo_meta db: db, photos: curr_photos, fields: fields, exif: photos_disk, old_data: photos_db
-      elsif @conf[:cmd] == "rm" then
+        insert_new_photos db: db, photos: new_photos, fields: @conf[:fields][:photos], exif: photos_disk
+
+      when "update" then
+        update_photo_meta db: db, photos: curr_photos, fields: @conf[:fields][:photos], exif: photos_disk, old_data: photos_db
+
+      when "rm" then
         if @conf[:all_photos] && ! @conf[:force] then
           puts "Deleting all photos requires --force."
           exit
         end
         remove_photo db: db, photos: curr_photos
-      elsif @conf[:cmd] == "show" then
+
+      when "show" then
         show_photos db: db, photos: curr_photos, galleries: @conf[:galleries], data: photos_db
-      elsif @conf[:cmd] == "to-g" then
-        add_photos_to_galleries db: db, photos: @conf[:photos], galleries: @conf[:galleries]
-      elsif @conf[:cmd] == "from-g" then
+
+      when "to-g" then
+        add_photos_to_galleries db: db, photos: curr_photos, galleries: @conf[:galleries], fields: @conf[:fields][:photo_galleries]
+
+      when "from-g" then
         if @conf[:all_photos] && ! @conf[:force] then
           puts "Removing all photos from galleries requires --force."
           exit
         end
-        remove_photos_from_galleries db: db, photos: @conf[:photos], galleries: @conf[:galleries]
+        remove_photos_from_galleries db: db, photos: curr_photos, galleries: @conf[:galleries], fields: @conf[:fields][:photo_galleries]
       end
     else
       # Gallery commands.
-      if @conf[:cmd] == "g-add" then
-        create_gallery db: db
-      elsif @conf[:cmd] == "g-update" then
-        update_galleries db: db, galleries: @conf[:galleries]
-      elsif @conf[:cmd] == "g-show" then
+      case @conf[:cmd]
+
+      when "g-add" then
+        create_gallery db: db, fields: @conf[:fields][:galleries]
+
+      when "g-update" then
+        update_galleries db: db, galleries: @conf[:galleries], fields: @conf[:fields][:galleries]
+
+      when "g-show" then
         show_galleries db: db, galleries: @conf[:galleries]
-      elsif @conf[:cmd] == "g-ls" then
+
+      when "g-ls" then
         list_gallery_photos db: db, galleries: @conf[:galleries]
-      elsif @conf[:cmd] == "g-rm" then
+
+      when "g-rm" then
         if ! @conf[:force] then
           puts "Deleting galleries requires --force."
           exit
@@ -250,7 +267,7 @@ def insert_new_photos(opts)
 
   return if photos.length == 0
 
-  sql_ins_photos  = "INSERT INTO photos (" + fields[:photos][:db].join(',') + ") VALUES (" + fields[:photos][:db].collect{ |f| '?'}.join(',') + ")"
+  sql_ins_photos  = "INSERT INTO photos (" + fields[:db].join(',') + ") VALUES (" + fields[:db].collect{ |f| '?'}.join(',') + ")"
   stmt_ins_photos = db.prepare(sql_ins_photos)
 
   # TODO: from the last photo in the database, or the previous session..?
@@ -295,7 +312,7 @@ def insert_new_photos(opts)
     unless @conf[:exifonly]
       begin
         puts "#{photo}"
-        fields[:photos][:user].each do |field|
+        fields[:user].each do |field|
           prev[field.to_sym] = data[field.to_sym] = prompt_field field: field, default: prev[field.to_sym]
         end
 
@@ -328,7 +345,7 @@ def insert_new_photos(opts)
       end
     end
     
-    data_ins_photos = fields[:photos][:db].collect{ |f| data[f.to_sym] }
+    data_ins_photos = fields[:db].collect{ |f| data[f.to_sym] }
 
     puts "Inserting photo #{photo} into the database." if @conf[:verbose]
     stmt_ins_photos.execute(*data_ins_photos) unless @conf[:simulate]
@@ -344,7 +361,7 @@ def update_photo_meta(opts)
   exif     = opts[:exif]
   old_data = opts[:old_data]
 
-  sql_upd_photos  = "UPDATE photos SET " + fields[:photos][:db].collect{ |field| field + '=?'  }.join(',') + " WHERE name=?"
+  sql_upd_photos  = "UPDATE photos SET " + fields[:db].collect{ |field| field + '=?'  }.join(',') + " WHERE name=?"
   stmt_upd_photos = db.prepare(sql_upd_photos)
 
   photos.each do |photo|
@@ -385,7 +402,7 @@ def update_photo_meta(opts)
 
     unless @conf[:exifonly]
       begin
-        fields[:photos][:user].each do |field|
+        fields[:user].each do |field|
           data[field.to_sym] = prompt_field field: field, default: old_data[photo][field]
         end
 
@@ -405,7 +422,7 @@ def update_photo_meta(opts)
       data[:t_width], data[:t_height] = img.columns, img.rows
     end
 
-    data_upd_photos = fields[:photos][:db].collect{ |field| data[field.to_sym].to_s }
+    data_upd_photos = fields[:db].collect{ |field| data[field.to_sym].to_s }
 
     puts "Updating properties for photo #{photo} in the database." if @conf[:verbose]
     stmt_upd_photos.execute(*data_upd_photos, photo) unless @conf[:simulate]
@@ -463,9 +480,8 @@ def show_photos(opts)
 end
 
 def create_gallery(opts)
-  db       = opts[:db]
-
-  fields = %w{ name title description epoch }
+  db     = opts[:db]
+  fields = opts[:fields]
 
   sql_ins_gallery  = "INSERT INTO galleries (" + fields.join(',') + ") VALUES (" + fields.collect{ |f| '?' }.join(',')  + ")"
   stmt_ins_gallery = db.prepare(sql_ins_gallery)
@@ -486,8 +502,7 @@ end
 def update_galleries(opts)
   db        = opts[:db]
   galleries = opts[:galleries]
-
-  fields = %w{ name title description epoch }
+  fields = opts[:fields]
 
   # Load previous values to use as default on the prompt.
   gallery_data = {}
@@ -558,7 +573,6 @@ def list_gallery_photos(opts)
     db.execute(sql_sel_gphotos, gallery) do |row|
       puts "  #{row['photo_name']}"
     end
-
   end
 end
 
@@ -573,32 +587,71 @@ def delete_galleries(opts)
   stmt_del_gallery = db.prepare(sql_del_gallery)
 
   galleries.each do |gallery|
-    stmt_del_gphotos.execute(gallery)
-    stmt_del_gallery.execute(gallery)
+    stmt_del_gphotos.execute(gallery) unless @conf[:simulate]
+    stmt_del_gallery.execute(gallery) unless @conf[:simulate]
 
     puts "Gallery #{gallery} deleted."
   end
-
 end
 
 def add_photos_to_galleries(opts)
   db        = opts[:db]
   photos    = opts[:photos]
   galleries = opts[:galleries]
+  fields    = opts[:fields]
 
-  # FIXME implement
+  sql_sel_gphotos  = "SELECT " + fields.join(',') + " FROM photo_galleries WHERE " + fields.collect{ |f| "#{f}=?" }.join(' AND ')
+  stmt_sel_gphotos = db.prepare(sql_sel_gphotos)
 
+  sql_ins_gphotos = "INSERT INTO photo_galleries (" + fields.join(',') + ") VALUES (" + fields.collect{ |f| '?' }.join(',') + ")"
+  stmt_ins_gphotos = db.prepare(sql_ins_gphotos)
+
+  galleries.each do |gallery|
+    photos.each do |photo|
+      data = {
+        photo_name:   photo,
+        gallery_name: gallery,
+      }
+      values = fields.collect{ |f| data[f.to_sym] }
+
+      already_added = false
+      stmt_sel_gphotos.execute(*values).each do |row|
+        already_added = true
+        break
+      end
+
+      if already_added then
+        puts "Photo #{photo} already exists in gallery #{gallery}."
+      else
+        stmt_ins_gphotos.execute(*values) unless @conf[:simulate]
+        puts "Photo #{photo} added to gallery #{gallery}."
+      end
+    end
+  end
 end
 
 def remove_photos_from_galleries(opts)
   db        = opts[:db]
   photos    = opts[:photos]
   galleries = opts[:galleries]
+  fields    = opts[:fields]
 
-  # FIXME implement
+  sql_del_gphotos  = "DELETE FROM photo_galleries WHERE " + fields.collect{ |f| "#{f}=?" }.join(' AND ')
+  stmt_del_gphotos = db.prepare(sql_del_gphotos)
 
+  galleries.each do |gallery|
+    photos.each do |photo|
+      data = {
+        photo_name:   photo,
+        gallery_name: gallery,
+      }
+      values = fields.collect{ |f| data[f.to_sym] }
+
+      stmt_del_gphotos.execute(*values) unless @conf[:simulate]
+      puts "Photo #{photo} removed from gallery #{gallery}."
+    end
+  end
 end
-
 
 def prompt_field(opts)
   field   = opts[:field]
