@@ -5,8 +5,15 @@ require 'sqlite3'
 cgi = CGI.new
 
 load 'rb/gallery.rb'
+load 'rb/gallery_config.rb' if File.exist? 'rb/gallery_config.rb'
 
-gallery = Gallery::Gallery.new('gallery.db', {})
+filters = {
+  :instance => cgi.server_name
+}
+if cgi.has_key?('gallery') && cgi['gallery'].length > 0 then
+    filters[:gallery] = cgi['gallery']
+end
+gallery = Gallery::Gallery.new('gallery.sqlite3', filters)
 
 @dow = ['日','月','火','水','木','金','土']
 
