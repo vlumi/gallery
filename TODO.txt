@@ -1,4 +1,2 @@
-- craete thumbnails from admin.rb
-- script for managing galleries
-  - add files
-  - remove files
+- configuring gallery to use based on server hostname
+- gallery selection to UI

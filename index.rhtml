@@ -7,8 +7,9 @@ cgi = CGI.new
 load 'rb/gallery.rb'
 
 filters = {}
+# TODO: get the gallery from servername, configurations
 filters[:gallery] = 'lenkun'
-#filters['gallery'] = nil
+#filters[:gallery] = nil
 if cgi.has_key?('country') && cgi['country'].length > 0 then
     filters[:country] = cgi['country']
 end
@@ -21,6 +22,7 @@ end
 gallery = Gallery::Gallery.new('gallery.sqlite3', filters)
 countries = gallery.getCountries()
 
+# TODO: proper localization
 @dow = ['日','月','火','水','木','金','土']
 
 
