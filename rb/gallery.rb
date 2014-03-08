@@ -86,8 +86,9 @@ module Gallery
       @camera_counts  = {}
       @author_counts  = {}
 
-      if filters[:instance] && ! filters[:gallery] then
-        filters[:gallery] = map_instance_to_gallery(filters[:instance])
+      if filters[:instance] then
+        gallery = map_instance_to_gallery(filters[:instance])
+        filters[:gallery] = gallery if gallery
       end
 
       sql_filters = []

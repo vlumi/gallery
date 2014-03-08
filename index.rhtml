@@ -10,6 +10,9 @@ load 'rb/gallery_config.rb' if File.exist? 'rb/gallery_config.rb'
 filters = {
   :instance => cgi.server_name
 }
+if cgi.has_key?('gallery') && cgi['gallery'].length > 0 then
+    filters[:gallery] = cgi['gallery']
+end
 if cgi.has_key?('country') && cgi['country'].length > 0 then
     filters[:country] = cgi['country']
 end
