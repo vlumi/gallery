@@ -7,7 +7,7 @@
 #
 #
 #
-# Copyright 2014 Ville Misaki
+# Copyright 2014 Ville Misaki <ville@misaki.fi>
 
 require 'optparse'
 require 'exifr'
@@ -15,7 +15,7 @@ require 'sqlite3'
 require 'RMagick'
 
 @conf = {
-  dbfile: 'gallery.db',
+  dbfile: 'gallery.sqlite3',
 
   cmd: '',
 

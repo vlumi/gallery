@@ -1,4 +1,5 @@
 backup/
 *.jpg
 *.db
+*.sqlite3
 *~

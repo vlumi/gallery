@@ -18,7 +18,7 @@ end
 if cgi.has_key?('author') && cgi['author'].length > 0 then
     filters[:author] = cgi['author']
 end
-gallery = Gallery::Gallery.new('gallery.db', filters)
+gallery = Gallery::Gallery.new('gallery.sqlite3', filters)
 countries = gallery.getCountries()
 
 @dow = ['日','月','火','水','木','金','土']
