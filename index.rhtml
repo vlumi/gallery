@@ -8,8 +8,7 @@ load 'rb/gallery.rb'
 
 filters = {}
 # TODO: get the gallery from servername, configurations
-filters[:gallery] = 'lenkun'
-#filters[:gallery] = nil
+filters[:gallery] = nil
 if cgi.has_key?('country') && cgi['country'].length > 0 then
     filters[:country] = cgi['country']
 end

@@ -104,10 +104,13 @@ def main
       when "add" then
         new_photos = @conf[:photos] & (photos_disk.keys - photos_db.keys)
 
-        insert_new_photos db: db, photos: new_photos, fields: @conf[:fields][:photos], exif: photos_disk
+        insert_new_photos db: db, fields: @conf[:fields][:photos], photos: new_photos, exif: photos_disk
+        if @conf[:galleries].length > 0 then
+          add_photos_to_galleries db: db, fields: @conf[:fields][:photo_galleries], photos: new_photos, galleries: @conf[:galleries]
+        end
 
       when "update" then
-        update_photo_meta db: db, photos: curr_photos, fields: @conf[:fields][:photos], exif: photos_disk, old_data: photos_db
+        update_photo_meta db: db, fields: @conf[:fields][:photos], photos: curr_photos, exif: photos_disk, old_data: photos_db
 
       when "rm" then
         if @conf[:all_photos] && ! @conf[:force] then
@@ -120,14 +123,14 @@ def main
         show_photos db: db, photos: curr_photos, galleries: @conf[:galleries], data: photos_db
 
       when "to-g" then
-        add_photos_to_galleries db: db, photos: curr_photos, galleries: @conf[:galleries], fields: @conf[:fields][:photo_galleries]
+        add_photos_to_galleries db: db, fields: @conf[:fields][:photo_galleries], photos: curr_photos, galleries: @conf[:galleries]
 
       when "from-g" then
         if @conf[:all_photos] && ! @conf[:force] then
           puts "Removing all photos from galleries requires --force."
           exit
         end
-        remove_photos_from_galleries db: db, photos: curr_photos, galleries: @conf[:galleries], fields: @conf[:fields][:photo_galleries]
+        remove_photos_from_galleries db: db, fields: @conf[:fields][:photo_galleries], photos: curr_photos, galleries: @conf[:galleries]
       end
     else
       # Gallery commands.
@@ -137,7 +140,7 @@ def main
         create_gallery db: db, fields: @conf[:fields][:galleries]
 
       when "g-update" then
-        update_galleries db: db, galleries: @conf[:galleries], fields: @conf[:fields][:galleries]
+        update_galleries db: db, fields: @conf[:fields][:galleries], galleries: @conf[:galleries]
 
       when "g-show" then
         show_galleries db: db, galleries: @conf[:galleries]
@@ -265,9 +268,10 @@ def init_db(dbfile)
 end # init_db
 
 def insert_new_photos(opts)
-  photos = opts[:photos]
   db     = opts[:db]
   fields = opts[:fields]
+
+  photos = opts[:photos]
   exif   = opts[:exif]
 
   return if photos.length == 0
@@ -349,9 +353,10 @@ def insert_new_photos(opts)
 end # insert_new_photos
 
 def update_photo_meta(opts)
+  db     = opts[:db]
+  fields = opts[:fields]
+
   photos   = opts[:photos]
-  db       = opts[:db]
-  fields   = opts[:fields]
   exif     = opts[:exif]
   old_data = opts[:old_data]
 
@@ -497,9 +502,10 @@ def create_gallery(opts)
 end
 
 def update_galleries(opts)
-  db        = opts[:db]
-  galleries = opts[:galleries]
+  db     = opts[:db]
   fields = opts[:fields]
+
+  galleries = opts[:galleries]
 
   # Load previous values to use as default on the prompt.
   gallery_data = {}
@@ -592,11 +598,12 @@ def delete_galleries(opts)
 end
 
 def add_photos_to_galleries(opts)
-  db        = opts[:db]
+  db     = opts[:db]
+  fields = opts[:fields]
+
   photos    = opts[:photos]
   galleries = opts[:galleries]
-  fields    = opts[:fields]
-
+  
   sql_sel_gphotos  = "SELECT " + fields.join(',') + " FROM photo_galleries WHERE " + fields.collect{ |f| "#{f}=?" }.join(' AND ')
   stmt_sel_gphotos = db.prepare(sql_sel_gphotos)
 
@@ -628,10 +635,11 @@ def add_photos_to_galleries(opts)
 end
 
 def remove_photos_from_galleries(opts)
-  db        = opts[:db]
+  db     = opts[:db]
+  fields = opts[:fields]
+
   photos    = opts[:photos]
   galleries = opts[:galleries]
-  fields    = opts[:fields]
 
   sql_del_gphotos  = "DELETE FROM photo_galleries WHERE " + fields.collect{ |f| "#{f}=?" }.join(' AND ')
   stmt_del_gphotos = db.prepare(sql_del_gphotos)
