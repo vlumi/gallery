@@ -5,10 +5,11 @@ require 'sqlite3'
 cgi = CGI.new
 
 load 'rb/gallery.rb'
+load 'rb/gallery_config.rb' if File.exist? 'rb/gallery_config.rb'
 
-filters = {}
-# TODO: get the gallery from servername, configurations
-filters[:gallery] = nil
+filters = {
+  :instance => cgi.server_name
+}
 if cgi.has_key?('country') && cgi['country'].length > 0 then
     filters[:country] = cgi['country']
 end

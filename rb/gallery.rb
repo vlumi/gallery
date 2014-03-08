@@ -63,10 +63,11 @@ module Gallery
       :author_counts, :max_author_count
 
     # filters may be used to restrict to only matching photos:
-    #  - gallery: name of the gallery
-    #  - country: country code
-    #  - camera:  camera model, as in the database
-    #  - author:  name of the author
+    #  - instance: e.g. the hostname, can be mapped to a gallery
+    #  - gallery:  name of the gallery
+    #  - country:  country code
+    #  - camera:   camera model, as in the database
+    #  - author:   name of the author
     def initialize(dbfile, filters = nil)
       @photos = {}
 
@@ -84,6 +85,10 @@ module Gallery
       @country_counts = {}
       @camera_counts  = {}
       @author_counts  = {}
+
+      if filters[:instance] && ! filters[:gallery] then
+        filters[:gallery] = map_instance_to_gallery(filters[:instance])
+      end
 
       sql_filters = []
       sql_filter_vals = []
@@ -193,6 +198,8 @@ module Gallery
       @max_author_count  = @author_counts.values.max
     end # def initialize()
 
+    def map_instance_to_gallery(instance) ; end
+
     def _parse_row(row, id)
       photo = Photo.new({
                           ':id'      => id,
@@ -258,7 +265,7 @@ module Gallery
       (Date.new(year, 12, 31) << (12-month)).day
     end
 
-    private :_parse_row, :_days_in_month
+    private :map_instance_to_gallery, :_parse_row, :_days_in_month
 
 
     def getYears()

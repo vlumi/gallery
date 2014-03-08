@@ -1,0 +1,28 @@
+#!/usr/bin/ruby
+# encoding: utf-8
+
+# This file is used for installation-specific configuration, utilizing
+# hooks in the main gallery class to allow configurable behavior.
+#
+# Copy this file to gallery_config.rb to enable.
+#
+# Copyright 2014 Ville Misaki <ville@misaki.fi>
+
+module Gallery
+  class Gallery
+
+    # Map the instance (server_name by default) to a specific gallery.
+    # Returns the name of the gallery to use, or nil for all photos.
+    def map_instance_to_gallery(instance)
+      case instance
+      when 'something.example.com.' then
+        'something'
+      when 'gallery.example.com.' then
+        'gallery'
+      else
+        nil
+      end
+    end
+
+  end
+end
