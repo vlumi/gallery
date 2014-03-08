@@ -399,7 +399,11 @@ def update_photo_meta(opts)
 
     puts "Processing #{photo}" if @conf[:debug]
 
-    unless @conf[:exifonly]
+    if @conf[:exifonly]
+      fields[:user].each do |field|
+        data[field.to_sym] = old_data[photo][field]
+      end
+    else
       begin
         puts "#{photo}"
         fields[:user].each do |field|
