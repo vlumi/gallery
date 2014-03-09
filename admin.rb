@@ -85,32 +85,45 @@ def main
       # Photos that were explicitly selected and are in the db.
       curr_photos = @conf[:photos] & photos_db.keys
 
-      photos_disk = {}
-      if %w{ add update }.include? @conf[:cmd] then
-        # Collect information about the photos on the disk.
-        @conf[:photos].each do |f|
-          photos_disk[f] = EXIFR::JPEG.new('full/' + f).to_hash
+      found_photos   = []
+      missing_photos = []
+      @conf[:photos].each do |photo|
+        if File.exist? "full/#{photo}" then
+          found_photos << photo
+        else
+          missing_phtos << photo
         end
-        missing_photos = @conf[:photos] & (photos_db.keys - photos_disk.keys)
+      end
 
-        if missing_photos.length > 0 then
-          puts "The following photos found in the database were not found on disk:"
-          puts missing_photos.collect{ |f| " - #{f}\n" }
-        end
+      if missing_photos.length > 0 then
+        puts "The following photos found in the database were not found on disk:"
+        puts missing_photos.collect{ |f| " - #{f}\n" }
       end
 
       case @conf[:cmd]
         
       when "add" then
-        new_photos = @conf[:photos] & (photos_disk.keys - photos_db.keys)
+        new_photos = @conf[:photos] & (found_photos - photos_db.keys)
 
-        insert_new_photos db: db, fields: @conf[:fields][:photos], photos: new_photos, exif: photos_disk
+        exif = {}
+        # Collect information about the photos on the disk.
+        new_photos.each do |photo|
+          exif[photo] = EXIFR::JPEG.new("full/#{photo}").to_hash
+        end
+
+        insert_new_photos db: db, fields: @conf[:fields][:photos], photos: new_photos, exif: exif
         if @conf[:galleries].length > 0 then
           add_photos_to_galleries db: db, fields: @conf[:fields][:photo_galleries], photos: new_photos, galleries: @conf[:galleries]
         end
 
       when "update" then
-        update_photo_meta db: db, fields: @conf[:fields][:photos], photos: curr_photos, exif: photos_disk, old_data: photos_db
+        exif = {}
+        # Collect information about the photos on the disk.
+        @conf[:photos].each do |photo|
+          exif[photo] = EXIFR::JPEG.new("full/#{photo}").to_hash
+        end
+
+        update_photo_meta db: db, fields: @conf[:fields][:photos], photos: curr_photos, exif: exif, old_data: photos_db
 
       when "rm" then
         if @conf[:all_photos] && ! @conf[:force] then
