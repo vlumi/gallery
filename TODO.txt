@@ -1,2 +1,2 @@
-- configuring gallery to use based on server hostname
+- bin-scripts runnable from other locations than their parent directory
 - gallery selection to UI
