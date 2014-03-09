@@ -195,7 +195,7 @@ def parse_params(conf)
     o.separator "    from-g        Remove the selected photos from the given galleries."
     o.separator ""
     o.separator "Options:"
-    o.on("-g", "--gallery [x,y,z]", "The gallery to use with add-gal and rm-gal commands.") do |v|
+    o.on("-g", "--gallery [x,y,z]", "The gallery to use with gallery-related commands, or :none for photos outside of any galleries.") do |v|
       (conf[:galleries] << v.split(',')).flatten!
     end
     o.on("--exifonly", "Only load and update the exif to the database, not prompting or touching user-specific fields.") do |v|
@@ -585,13 +585,22 @@ def list_gallery_photos(opts)
     db.execute(sql_sel_galleries) do |row|
       galleries << row['name']
     end
+    galleries << ':none'
   end
 
   sql_sel_gphotos  = "SELECT photo_name FROM photo_galleries WHERE gallery_name=? ORDER BY photo_name"
   galleries.sort_by { |gallery| gallery.downcase }.each do |gallery|
-    puts "#{gallery}"
+    next if gallery =~ /:/
+    puts "#{gallery}:"
     db.execute(sql_sel_gphotos, gallery) do |row|
       puts "  #{row['photo_name']}"
+    end
+  end
+  if galleries.include? ':none' then
+    puts "Not in galleries:"
+    sql_sel_ngphotos = "SELECT name FROM photos WHERE name NOT IN (SELECT photo_name FROM photo_galleries)"
+    db.execute(sql_sel_ngphotos) do |row|
+      puts "  #{row['name']}"
     end
   end
 end
