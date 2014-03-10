@@ -36,6 +36,35 @@ gallery = Gallery::Gallery.new('gallery.sqlite3', filters)
   <table>
    <thead>
     <tr>
+     <th colspan="4">Galleries</th>
+    </tr>
+   </thead>
+   <tbody>
+<%
+  galleries         = gallery.getGalleries
+  max_gallery_count = gallery.max_gallery_count
+  gallery_counts    = gallery.gallery_counts
+  
+  galleries.keys.sort{ |x,y| [gallery_counts[y], galleries[x].downcase] <=> [gallery_counts[x], galleries[y].downcase] }.each do |g|
+    bar_pct = sprintf('%.1f%%', gallery_counts[g].to_f / gallery.total_count * 100)
+    bar_length = [1, (gallery_counts[g].to_f / max_gallery_count * 100).round].max
+    bar_max = (bar_length == 100 ? ' max' : '')
+%>
+    <tr>
+     <th class="data"><img src="css/blank.gif" class="flag flag-<%=g%>" alt="<%=g%>" title="<%=galleries[g]%>"/></th>
+     <th><a href="/?gallery=<%=CGI::escape(g)%>"><%=galleries[g]%></a></th>
+     <td><%=gallery_counts[g].to_i%></td>
+     <td class="bar"><img class="bar<%=bar_max%>" style="width: <%=bar_length%>px" src="css/blank.gif" alt="" title="<%=bar_pct%>"/></td>
+    </tr>
+<%
+  end
+%>
+   </tbody>
+  </table>
+  
+  <table>
+   <thead>
+    <tr>
      <th colspan="4">Countries</th>
     </tr>
    </thead>
@@ -45,7 +74,7 @@ gallery = Gallery::Gallery.new('gallery.sqlite3', filters)
   max_country_count = gallery.max_country_count
   country_counts    = gallery.country_counts
   
-  country_counts.keys.sort { |x,y| [country_counts[y], countries[x].downcase] <=> [country_counts[x], countries[y].downcase] }.each do |country|
+  country_counts.keys.sort{ |x,y| [country_counts[y], countries[x].downcase] <=> [country_counts[x], countries[y].downcase] }.each do |country|
     bar_pct = sprintf('%.1f%%', country_counts[country].to_f / gallery.total_count * 100)
     bar_length = [1, (country_counts[country].to_f / max_country_count * 100).round].max
     bar_max = (bar_length == 100 ? ' max' : '')
@@ -73,7 +102,7 @@ gallery = Gallery::Gallery.new('gallery.sqlite3', filters)
   max_camera_count = gallery.max_camera_count
   camera_counts    = gallery.camera_counts
   
-  camera_counts.keys.sort { |x,y| [camera_counts[y], x.downcase] <=> [camera_counts[x], y.downcase] }.each do |camera|
+  camera_counts.keys.sort{ |x,y| [camera_counts[y], x.downcase] <=> [camera_counts[x], y.downcase] }.each do |camera|
     bar_pct = sprintf('%.1f%%', camera_counts[camera].to_f / gallery.total_count * 100)
     bar_length = [1, (camera_counts[camera].to_f / max_camera_count * 100).round].max
     bar_max = (bar_length == 100 ? ' max' : '')
@@ -100,7 +129,7 @@ gallery = Gallery::Gallery.new('gallery.sqlite3', filters)
   max_author_count = gallery.max_author_count
   author_counts    = gallery.author_counts
   
-  author_counts.keys.sort { |x,y| [author_counts[y], x.downcase] <=> [author_counts[x], y.downcase] }.each do |author|
+  author_counts.keys.sort{ |x,y| [author_counts[y], x.downcase] <=> [author_counts[x], y.downcase] }.each do |author|
     bar_pct = sprintf('%.1f%%', author_counts[author].to_f / gallery.total_count * 100)
     bar_length = [1, (author_counts[author].to_f / max_author_count * 100).round].max
     bar_max = (bar_length == 100 ? ' max' : '')

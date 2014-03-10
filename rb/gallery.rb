@@ -58,13 +58,14 @@ module Gallery
       :moy_counts, :max_moy_count, # Month of year
       :dow_counts, :max_dow_count, # Day of week
       :hod_counts, :max_hod_count, # Hour of day
+      :gallery_counts, :max_gallery_count,
       :country_counts, :max_country_count,
       :camera_counts, :max_camera_count,
       :author_counts, :max_author_count
 
     # filters may be used to restrict to only matching photos:
     #  - instance: e.g. the hostname, can be mapped to a gallery
-    #  - gallery:  name of the gallery
+    #  - gallery:  name of the gallery, or ":none" for photos outside any galleries
     #  - country:  country code
     #  - camera:   camera model, as in the database
     #  - author:   name of the author
@@ -82,6 +83,7 @@ module Gallery
       @dow_counts = [0, 0, 0, 0, 0, 0, 0]
       @hod_counts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
+      @gallery_counts = {}
       @country_counts = {}
       @camera_counts  = {}
       @author_counts  = {}
@@ -97,8 +99,12 @@ module Gallery
       if filters != nil and filters.is_a?(Hash) then
         if filters[:gallery] != nil then
           gallery = filters[:gallery]
-          sql_filters.push('photo_galleries.gallery_name=?')
-          sql_filter_vals << filters[:gallery]
+          if gallery == ':none' then
+            sql_filters.push 'name NOT IN (SELECT photo_name FROM photo_galleries)'
+          else
+            sql_filters.push('photo_galleries.gallery_name=?')
+            sql_filter_vals << filters[:gallery]
+          end
         end
         [:country, :camera, :author].each do |type|
           if filters[type] != nil then
@@ -107,7 +113,7 @@ module Gallery
           end
         end
       end
-      if gallery != nil then
+      if gallery != nil && gallery != ':none' then
         sql = 'SELECT * FROM photos JOIN photo_galleries ON photo_galleries.photo_name=photos.name'
       else
         sql = 'SELECT * FROM photos'
@@ -123,9 +129,20 @@ module Gallery
         db.results_as_hash = true
         db.type_translation = true
 
-        @galleries = []
-        db.execute('SELECT name, title, description, epoch FROM galleries ORDER BY name') do |row|
-          @galleries << row['name']
+        @galleries = {}
+        sql_sel_galleries = <<SQL
+          SELECT name, title, description, epoch, COUNT(*), MIN(photo_name)
+           FROM galleries
+            LEFT OUTER JOIN photo_galleries ON (name=gallery_name)
+           GROUP BY name, title, description, epoch
+           ORDER BY name
+SQL
+        db.execute(sql_sel_galleries) do |row|
+          gallery_title = row['title']
+          gallery_title = row['name'] unless gallery_title != ""
+          @galleries[ row['name'] ] = gallery_title
+          
+          @gallery_counts[ row['name'] ] = row['MIN(photo_name)'] ? row['COUNT(*)'] : 0
           if gallery != nil and row['name'] == gallery then
             @name        = row['name']
             @title       = row['title']
@@ -135,6 +152,19 @@ module Gallery
               @epoch.shift
             end
           end
+        end
+
+        sql_sel_nogallery = <<SQL
+          SELECT COUNT(*)
+           FROM photos
+           WHERE name NOT IN (
+            SELECT photo_name
+             FROM photo_galleries
+           )
+SQL
+        db.execute(sql_sel_nogallery) do |row|
+          @galleries[':none']      = '(None)'
+          @gallery_counts[':none'] = row['COUNT(*)']
         end
 
         db.execute(sql, sql_filter_vals) do |row|
@@ -195,6 +225,7 @@ module Gallery
       @max_dow_count = @dow_counts.max
       @max_hod_count = @hod_counts.max
 
+      @max_gallery_count = @gallery_counts.values.max
       @max_country_count = @country_counts.values.max
       @max_camera_count  = @camera_counts.values.max
       @max_author_count  = @author_counts.values.max
@@ -306,7 +337,7 @@ module Gallery
     def getCountries()
       countries = {}
       @country_counts.keys.each do |c|
-        countries[c] = COUNTRY_MAP[c]
+        countries[c] = c
       end
       countries
     end # def getCountries()
