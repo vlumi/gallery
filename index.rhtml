@@ -64,7 +64,7 @@ if etime != nil && etime.kind_of?(Array) && etime.length >= 6 then
    var epochd = new Date(Date.UTC(<%=etime[0]%>, <%=etime[1]%>, <%=etime[2]%>, <%=etime[3]%>, <%=etime[4]%>, <%=etime[5]%>));
    function update_age() {
       var now = new Date(new Date().getTime() + offset);
-      $('#age').html(getDateDiffStr(epochd, now, 'date'));
+      $('#age').html(vlumi.Age.getDateDiffStr(epochd, now, 'date'));
    }
    // Updating once a minute should be OK.
    var t = setInterval(update_age, 60000);
@@ -79,10 +79,10 @@ end
          maxWidth: '100%',
          maxHeight: '100%',
          onLoad: function() {
-         	var id = this.id.substring(1);
-         	show_month_containing('i' + id);
+            var id = this.id.substring(1);
+            vlumi.Gallery.show_month_containing('i' + id);
             if (history != null && typeof history.pushState == 'function') {
-               var filters = get_url_filters();
+               var filters = vlumi.Gallery.get_url_filters();
                history.pushState(null, this.name, window.location.pathname + '?p=' + id + (filters.length > 0 ? '&' + filters : ''));
             }
          },
@@ -90,12 +90,12 @@ end
          onCleanup: false,
          onClosed: function() {
             if (history != null && typeof history.pushState == 'function') {
-               var filters = get_url_filters();
-               if (is_last_month()) {
+               var filters = vlumi.Gallery.get_url_filters();
+               if (vlumi.Gallery.is_last_month()) {
                   history.pushState(null, '<%= gallery.title %>', window.location.pathname + (filters.length > 0 ? '?' + filters : ''));
                }
                else {
-                  history.pushState(null, '<%= gallery.title %>', window.location.pathname + '?m=' + get_curr_month() + (filters.length > 0 ? '&' + filters : ''));
+                  history.pushState(null, '<%= gallery.title %>', window.location.pathname + '?m=' + vlumi.Gallery.get_curr_month() + (filters.length > 0 ? '&' + filters : ''));
                }
             }
          },
@@ -103,14 +103,14 @@ end
       });<%
 if /^\d+$/.match(cgi['p']) then
 %>
-      show_month_containing('i<%=cgi['p']%>');
+      vlumi.Gallery.show_month_containing('i<%=cgi['p']%>');
       $('a#i<%=cgi['p']%>').click();<%
 elsif /^\d+-\d+$/.match(cgi['m']) then
 %>
-      show_month('m<%=cgi['m']%>');<%
+      vlumi.Gallery.show_month('m<%=cgi['m']%>');<%
 else
 %>
-      show_month('last');<%
+      vlumi.Gallery.show_month('last');<%
 end
 %>
       if (show_age) update_age();
@@ -121,11 +121,11 @@ end
  <body>
   <h1><%= gallery.title %></h1>
   <h2 class="month_nav">
-   <span class="nav first" title="First month"><a href="#" onclick="return show_month('first');">|&lt;&lt;</a></span>
-   <span class="nav prev"><a href="#" onclick="return show_prev_month();">&lt;&lt;</a></span>
+   <span class="nav first" title="First month"><a href="#" onclick="return vlumi.Gallery.show_month('first');">|&lt;&lt;</a></span>
+   <span class="nav prev"><a href="#" onclick="return vlumi.Gallery.show_prev_month();">&lt;&lt;</a></span>
    <span class="title"></span>
-   <span class="nav next"><a href="#" onclick="return show_next_month();">&gt;&gt;</a></span>
-   <span class="nav last" title="Last month"><a href="#" onclick="return show_month('last');">&gt;&gt;|</a></span>
+   <span class="nav next"><a href="#" onclick="return vlumi.Gallery.show_next_month();">&gt;&gt;</a></span>
+   <span class="nav last" title="Last month"><a href="#" onclick="return vlumi.Gallery.show_month('last');">&gt;&gt;|</a></span>
   </h2>
   <div id="months">
 <%
@@ -168,11 +168,11 @@ end # years
 %>
   </div>
   <h2 class="month_nav">
-   <span class="nav first" title="First month"><a href="#" onclick="return show_month('first');">|&lt;&lt;</a></span>
-   <span class="nav prev"><a href="#" onclick="return show_prev_month();">&lt;&lt;</a></span>
+   <span class="nav first" title="First month"><a href="#" onclick="return vlumi.Gallery.show_month('first');">|&lt;&lt;</a></span>
+   <span class="nav prev"><a href="#" onclick="return vlumi.Gallery.show_prev_month();">&lt;&lt;</a></span>
    <span class="title"></span>
-   <span class="nav next"><a href="#" onclick="return show_next_month();">&gt;&gt;</a></span>
-   <span class="nav last" title="Last month"><a href="#" onclick="return show_month('last');">&gt;&gt;|</a></span>
+   <span class="nav next"><a href="#" onclick="return vlumi.Gallery.show_next_month();">&gt;&gt;</a></span>
+   <span class="nav last" title="Last month"><a href="#" onclick="return vlumi.Gallery.show_month('last');">&gt;&gt;|</a></span>
   </h2>
   <hr>
 </body>
