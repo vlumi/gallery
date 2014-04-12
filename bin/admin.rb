@@ -82,6 +82,12 @@ def main
         photos_db[ row['name'] ] = row
       end
 
+      gallery_photos = {}
+      db.execute("SELECT photo_name, gallery_name FROM photo_galleries ORDER BY photo_name") do |row|
+        gallery_photos[ row['gallery_name'] ] ||= []
+        gallery_photos[ row['gallery_name'] ].push row['photo_name']
+      end
+
       # Photos that were explicitly selected and are in the db.
       curr_photos = @conf[:photos] & photos_db.keys
 
@@ -111,7 +117,29 @@ def main
           exif[photo] = EXIFR::JPEG.new("full/#{photo}").to_hash
         end
 
-        insert_new_photos db: db, fields: @conf[:fields][:photos], photos: new_photos, exif: exif
+        last_photo = nil
+        if photos_db.length > 0 then
+          if @conf[:galleries].length > 0 then
+            last_photos = []
+            @conf[:galleries].each do |gallery|
+              if gallery_photos[gallery].length > 0 then
+                last_photos.push gallery_photos[gallery][-1]
+              end
+            end
+            last_photo = last_photos.sort.last
+          else
+            last_photo = photos_db.keys.sort.last
+          end
+        end
+
+        defaults = {}
+        if last_photo != nil then
+          @conf[:fields][:photos][:user].each do |field|
+            defaults[field.to_sym] = photos_db[last_photo][field]
+          end
+        end
+
+        insert_new_photos db: db, fields: @conf[:fields][:photos], photos: new_photos, exif: exif, defaults: defaults
         if @conf[:galleries].length > 0 then
           add_photos_to_galleries db: db, fields: @conf[:fields][:photo_galleries], photos: new_photos, galleries: @conf[:galleries]
         end
@@ -284,23 +312,20 @@ def insert_new_photos(opts)
   db     = opts[:db]
   fields = opts[:fields]
 
-  photos = opts[:photos]
-  exif   = opts[:exif]
+  photos   = opts[:photos]
+  exif     = opts[:exif]
+  defaults = opts[:defaults]
 
   return if photos.length == 0
 
   sql_ins_photos  = "INSERT INTO photos (" + fields[:db].join(',') + ") VALUES (" + fields[:db].collect{ |f| '?'}.join(',') + ")"
   stmt_ins_photos = db.prepare(sql_ins_photos)
 
-  # TODO: from the last photo in the database, or the previous session..?
-  prev = {
-    title:       '',
-    description: '',
-    country:     '',
-    place:       '',
-    location:    '',
-    author:      '',
-  }
+  prev = Hash[
+              *fields[:user].collect { |field|
+                [ field.to_sym, defaults[field.to_sym] || '' ]
+              } .flatten
+             ]
 
   photos.each do |photo|
     data = {
