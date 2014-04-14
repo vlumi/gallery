@@ -97,7 +97,7 @@ def main
         if File.exist? "full/#{photo}" then
           found_photos << photo
         else
-          missing_phtos << photo
+          missing_photos << photo
         end
       end
 
