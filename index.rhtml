@@ -110,7 +110,7 @@ elsif /^\d+-\d+$/.match(cgi['m']) then
       vlumi.gallery.show_month('m<%=cgi['m']%>');<%
 else
 %>
-      vlumi.gallery.show_month('last');<%
+      vlumi.gallery.show_last_month();<%
 end
 %>
       if (show_age) update_age();
@@ -121,11 +121,11 @@ end
  <body>
   <h1><%= gallery.title %></h1>
   <h2 class="month_nav">
-   <span class="nav first" title="First month"><a href="#" onclick="return vlumi.gallery.show_month('first');">|&lt;&lt;</a></span>
+   <span class="nav first" title="First month"><a href="#" onclick="return vlumi.gallery.show_first_month();">|&lt;&lt;</a></span>
    <span class="nav prev"><a href="#" onclick="return vlumi.gallery.show_prev_month();">&lt;&lt;</a></span>
    <span class="title"></span>
    <span class="nav next"><a href="#" onclick="return vlumi.gallery.show_next_month();">&gt;&gt;</a></span>
-   <span class="nav last" title="Last month"><a href="#" onclick="return vlumi.gallery.show_month('last');">&gt;&gt;|</a></span>
+   <span class="nav last" title="Last month"><a href="#" onclick="return vlumi.gallery.show_last_month();">&gt;&gt;|</a></span>
   </h2>
   <div id="months">
 <%
@@ -168,11 +168,11 @@ end # years
 %>
   </div>
   <h2 class="month_nav">
-   <span class="nav first" title="First month"><a href="#" onclick="return vlumi.gallery.show_month('first');">|&lt;&lt;</a></span>
+   <span class="nav first" title="First month"><a href="#" onclick="return vlumi.gallery.show_first_month();">|&lt;&lt;</a></span>
    <span class="nav prev"><a href="#" onclick="return vlumi.gallery.show_prev_month();">&lt;&lt;</a></span>
    <span class="title"></span>
    <span class="nav next"><a href="#" onclick="return vlumi.gallery.show_next_month();">&gt;&gt;</a></span>
-   <span class="nav last" title="Last month"><a href="#" onclick="return vlumi.gallery.show_month('last');">&gt;&gt;|</a></span>
+   <span class="nav last" title="Last month"><a href="#" onclick="return vlumi.gallery.show_last_month();">&gt;&gt;|</a></span>
   </h2>
   <hr>
 </body>
