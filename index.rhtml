@@ -42,6 +42,7 @@ countries = gallery.getCountries()
   <script type="text/javascript" src="js/jquery-1.11.0.min.js"></script>
 <!--  <script type="text/javascript" src="js/jquery.colorbox-min.js"></script>-->
   <script type="text/javascript" src="js/jquery.colorbox.js"></script>
+  <script type="text/javascript" src="js/hammer.js"></script>
   <script type="text/javascript" src="js/jquery.purl.js"></script>
   <script type="text/javascript" src="js/gallery.js"></script>
   <script type="text/javascript" src="js/age.js"></script>
@@ -113,7 +114,22 @@ else
       vlumi.gallery.show_last_month();<%
 end
 %>
-      if (show_age) update_age();
+    $(document).on('cbox_open', function(){
+        Hammer(document.body).off("swipeleft", vlumi.gallery.show_next_month);
+        Hammer(document.body).off("swiperight", vlumi.gallery.show_prev_month);
+
+        Hammer(document.body).on("swipeleft", $.colorbox.next);
+        Hammer(document.body).on("swiperight", $.colorbox.prev);
+    });
+    $(document).on('cbox_closed', function(){
+        Hammer(document.body).off("swipeleft", $.colorbox.next);
+        Hammer(document.body).off("swiperight", $.colorbox.prev);
+
+        Hammer(document.body).on("swipeleft", vlumi.gallery.show_next_month);
+        Hammer(document.body).on("swiperight", vlumi.gallery.show_prev_month);
+    });
+
+    if (show_age) update_age();
    });
    //]]>
   </script>
