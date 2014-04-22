@@ -5,22 +5,30 @@ if (typeof vlumi === 'undefined') {
 }
 
 vlumi.gallery = (function() {
-	var update_prev_nav = function(month_id) {
+	var update_prev_nav = function(curr_month, month_id) {
+		var filters;
 		var prev_month = $("#" + month_id).prev();
 
 		if (prev_month.length === 0) {
 			$(".month_nav span.first").css("visibility", "hidden");
 			$(".month_nav span.prev").css("visibility", "hidden");
+			if (curr_month !== null && history !== null && typeof history.pushState === 'function') {
+				filters = vlumi.gallery.get_url_filters();
+				history.pushState(null, $('title').text(), window.location.pathname + (filters.length > 0 ? '?' + filters : ''));
+			}
 		}
 		else {
 			$(".month_nav span.first").css("visibility", "");
 			$(".month_nav span.prev").css("visibility", "").attr("title", $(prev_month).attr("title"));
+			if (curr_month !== null && history !== null && typeof history.pushState === 'function') {
+				filters = vlumi.gallery.get_url_filters();
+				history.pushState(null, $('title').text(), window.location.pathname + '?m=' + month_id.substr(1) + (filters.length > 0 ? '&' + filters : ''));
+			}
 		}
 	}
 
-	var update_next_nav = function(month_id) {
-		var filters;
-		var curr_month = vlumi.gallery.get_curr_month();
+	var update_next_nav = function(curr_month, month_id) {
+		var filters;	
 		var next_month = $("#" + month_id).next();
 
 		if (next_month.length === 0) {
@@ -28,7 +36,7 @@ vlumi.gallery = (function() {
 			$(".month_nav span.last").css("visibility", "hidden");
 			if (curr_month !== null && history !== null && typeof history.pushState === 'function') {
 				filters = vlumi.gallery.get_url_filters();
-				history.pushState(null, 'Lenni', window.location.pathname + (filters.length > 0 ? '?' + filters : ''));
+				history.pushState(null, $('title').text(), window.location.pathname + (filters.length > 0 ? '?' + filters : ''));
 			}
 		}
 		else {
@@ -36,7 +44,7 @@ vlumi.gallery = (function() {
 			$(".month_nav span.last").css("visibility", "");
 			if (curr_month !== null && history !== null && typeof history.pushState === 'function') {
 				filters = vlumi.gallery.get_url_filters();
-				history.pushState(null, 'Lenni', window.location.pathname + '?m=' + month_id.substr(1) + (filters.length > 0 ? '&' + filters : ''));
+				history.pushState(null, $('title').text(), window.location.pathname + '?m=' + month_id.substr(1) + (filters.length > 0 ? '&' + filters : ''));
 			}
 		}
 	}
@@ -69,14 +77,17 @@ vlumi.gallery = (function() {
 
 	return {
 		show_month: function(month_id) {
+			var curr_month, title;
+
 			if (! $("#" + month_id).is(":visible")) {
+				curr_month = vlumi.gallery.get_curr_month();
 				$("div.month_block").hide();
 				
-				var title = $("#" + month_id).attr("title");
+				title = $("#" + month_id).attr("title");
 				$(".month_nav span.title").html(title);
 				
-				update_prev_nav(month_id);
-				update_next_nav(month_id);
+				update_prev_nav(curr_month, month_id);
+				update_next_nav(curr_month, month_id);
 				
 				reveal_thumbnails(month_id);
 				update_date_age(month_id);
@@ -143,17 +154,17 @@ vlumi.gallery = (function() {
 		},
 
 		get_url_filters: function() {
-			var filters = [];
-			
 			var url = $.url();
-			if (url.param('country') !== null) {
-				filters.push('country=' + encodeURIComponent(url.param('country')).replace(/%20/g, '+'));
-			}
-			if (url.param('camera') !== null) {
-				filters.push('camera=' + encodeURIComponent(url.param('camera')).replace(/%20/g, '+'));
-			}
-			if (url.param('author') !== null) {
-				filters.push('author=' + encodeURIComponent(url.param('author')).replace(/%20/g, '+'));
+			var filters = [];
+
+			var sections = ["country", "camera", "author"];
+			var i, param;
+
+			for (i in sections) {
+				param = url.param(sections[i]);
+				if (param && typeof param !== 'undefined' && param !== null) {
+					filters.push(sections[i] + '=' + encodeURIComponent(param).replace(/%20/g, '+'));
+				}
 			}
 			
 			return filters.join("&");
