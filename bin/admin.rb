@@ -45,7 +45,7 @@ require 'RMagick'
       db: %w{
         name taken
         title description country place author
-        camera fstop shutter iso
+        camera focal fstop shutter iso
         width height t_width t_height f_width f_height
       },
     },
@@ -766,11 +766,11 @@ end
 def parse_exif(data, exif)
   {
     taken: exif[:date_time_original].to_s,
-    
+
     camera:  camera_name_from_exif(exif),
     focal:   exif[:focal_length].round,
     fstop:   exif[:aperture_value],
-    shutter: exif[:exposure_time].to_s,
+    shutter: (exif[:exposure_time] ? exif[:exposure_time].to_s : exif[:exposure_value].to_s),
     iso:     exif[:iso_speed_ratings],
 
     f_width:  exif[:width],
