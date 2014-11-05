@@ -26,7 +26,7 @@ CREATE TABLE photos (
   width       INTEGER,
   height      INTEGER,
   t_width     INTEGER,
-  t_height    INTEGER
+  t_height    INTEGER,
   f_width     INTEGER,
   f_height    INTEGER
 );
