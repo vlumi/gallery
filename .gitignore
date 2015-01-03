@@ -4,3 +4,4 @@ backup/
 *.sqlite3*
 *~
 \#*
+.*.attr
