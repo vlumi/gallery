@@ -38,6 +38,9 @@ body {
 .stats td.bar {
 	text-align: left;
 }
+.stats td.flags {
+	text-align: left;
+}
 .stats img.bar {
 	border: solid #004 1px;
 	background-color: #004;

@@ -207,12 +207,14 @@ gallery = Gallery::Gallery.new('gallery.sqlite3', filters)
      <td class="bar"><img class="bar<%=bar_max%>" style="width: <%=bar_length%>px" src="css/blank.gif" alt="" title="<%=bar_pct%>"/></td>
      <td><%=sprintf("%.2f", month_avgs[year][month])%> / day</td>
      <td class="bar"><img class="bar<%=avgbar_max%>" style="width: <%=avgbar_length%>px" src="css/blank.gif" alt="" title="<%=avgbar_pct%>"/></td>
-	 <td>
+	 <td class="flags">
 <%
    if month_countries.key?(year) and month_countries[year].key?(month) then
-     month_countries[year][month].sort.each do |country|
+     current_countries = month_countries[year][month]
+     current_countries.keys.sort { |a, b| [current_countries[b], a] <=> [current_countries[a], b] } .each do |country|
+       count = current_countries[country]
 %>
-       <img src="css/blank.gif" class="flag flag-<%=country%>" alt="<%=country%>" title="<%=country%>">
+       <img src="css/blank.gif" class="flag flag-<%=country%>" alt="<%=country%>" title="<%=country%>: <%=count%>">
 <%
      end
    end
