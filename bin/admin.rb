@@ -30,12 +30,12 @@ require 'RMagick'
   photos:     [],
   all_photos: false,
 
-  exifonly:  false,
-  force:     false,
-  verbose:   false,
-  debug:     false,
-  simulate:  false,
-  help:      false,
+  exifonly:   false,
+  force:      false,
+  verbose:    false,
+  debug:      false,
+  simulate:   false,
+  help:       false,
 
   # Schema for processing.
   fields: {
@@ -58,7 +58,7 @@ def main
 
   opts = parse_params(@conf)
 
-  if @conf[:help] || ! %w{ add update rm show g-add g-update g-rm g-show g-ls to-g from-g }.include?(@conf[:cmd]) then
+  if @conf[:help] || ! %w{ add update thumbs rm show g-add g-update g-rm g-show g-ls to-g from-g }.include?(@conf[:cmd]) then
     puts opts
     exit
   end
@@ -74,7 +74,7 @@ def main
     db.results_as_hash = true
     db.type_translation = true
 
-    if %w{add update rm show to-g from-g}.include? @conf[:cmd] then
+    if %w{add update thumbs rm show to-g from-g}.include? @conf[:cmd] then
       # Photo commands.
 
       photos_db = {}
@@ -153,6 +153,22 @@ def main
 
         update_photo_meta db: db, fields: @conf[:fields][:photos], photos: curr_photos, exif: exif, old_data: photos_db
 
+      when "thumbs" then
+        # Create the thumbnails for the photos.
+        @conf[:photos].each do |photo|
+          puts "creating thumbs for #{photo}"
+          create_thumbs(photo: photo, force: true)
+
+          Magick::ImageList.new("i/#{photo}").each do |img|
+            data[:width], data[:height] = img.columns, img.rows
+          end
+          Magick::ImageList.new("thumbs/#{photo}").each do |img|
+            data[:t_width], data[:t_height] = img.columns, img.rows
+          end
+
+        end
+        # TODO: update dimensions to db
+
       when "rm" then
         if @conf[:all_photos] && ! @conf[:force] then
           puts "Deleting all photos requires --force."
@@ -211,6 +227,7 @@ def parse_params(conf)
     o.separator "                  Defaults to all new photos if no photo given."
     o.separator "                  Creates thumbnails if not already present."
     o.separator "    update        Update the properties of the given photos."
+    o.separator "    thumbs        Re-create the thumbnails."
     o.separator "    rm            Remove the given photos from the database."
     o.separator "    show          Show the properties of the photos."
     o.separator "    g-add         Create a new gallery, prompting for properties."
@@ -711,27 +728,28 @@ end
 
 def create_thumbs(opts)
   photo = opts[:photo]
+  force = opts[:force]
 
-  need_thumbs = false
-  @conf[:thumbnails].each do |k,v|
-    unless File.exist? "#{k.to_s}/#{photo}" then
-      need_thumbs = true
-      break
+  unless force then 
+    need_thumbs = false
+    @conf[:thumbnails].each do |k,v|
+      unless File.exist? "#{k.to_s}/#{photo}" then
+        need_thumbs = true
+        break
+      end
     end
   end
 
-  if need_thumbs then
+  if force or need_thumbs then
     img_full = Magick::Image::read("full/#{photo}").first
 
     @conf[:thumbnails].each do |k,v|
-      unless File.exist? "#{k.to_s}/#{photo}" then
-        puts "Creating thumbnail #{v[:width]}x#{v[:height]} for photo #{photo}" if @conf[:verbose]
+      puts "Creating thumbnail #{v[:width]}x#{v[:height]} for photo #{photo}" if @conf[:verbose]
 
-        filename  = "#{k.to_s}/#{photo}"
-        img_thumb = img_full.resize_to_fit(v[:width], v[:height])
-        img_thumb.write(filename) unless @conf[:simulate]
-        File.chmod(0644, filename)
-      end
+      filename  = "#{k.to_s}/#{photo}"
+      img_thumb = img_full.resize_to_fit(v[:width], v[:height])
+      img_thumb.write(filename) unless @conf[:simulate]
+      File.chmod(0644, filename)
     end
   end
 end
