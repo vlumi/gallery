@@ -49,6 +49,12 @@ body {
 	background-color: #800;
 }
 
+.stats img.flag {
+	display: inline;
+	padding: 0;
+	margin: 0;
+}
+
 a {
     text-decoration: none;
 }

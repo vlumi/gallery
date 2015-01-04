@@ -55,6 +55,7 @@ module Gallery
       :total_count,
       :year_counts, :max_year_count, :year_avgs, :max_year_avg,
       :month_counts, :max_month_count, :month_avgs, :max_month_avg,
+      :month_countries,
       :moy_counts, :max_moy_count, # Month of year
       :dow_counts, :max_dow_count, # Day of week
       :hod_counts, :max_hod_count, # Hour of day
@@ -74,10 +75,11 @@ module Gallery
 
       @name, @title, @description, @epoch = '', '', '', []
 
-      @year_counts   = {}
-      @year_avgs     = {}
-      @month_counts  = {}
-      @month_avgs    = {}
+      @year_counts     = {}
+      @year_avgs       = {}
+      @month_counts    = {}
+      @month_avgs      = {}
+      @month_countries = {}
 
       @moy_counts = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
       @dow_counts = [0, 0, 0, 0, 0, 0, 0]
@@ -271,6 +273,13 @@ SQL
         @month_counts[y][m] = 1
       else
         @month_counts[y][m] += 1
+      end
+      if not @month_countries.has_key?(y) then
+        @month_countries[y] = { m => [row['country']] }
+      elsif not @month_countries[y].has_key?(m) then
+        @month_countries[y][m] = [row['country']]
+      elsif not @month_countries[y][m].include?(row['country']) then
+        @month_countries[y][m].push(row['country'])
       end
 
       @moy_counts[m - 1]   += 1
