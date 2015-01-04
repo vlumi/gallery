@@ -3,7 +3,7 @@ gallery
 
 A calendar-based gallery website, aimed for capturing a child's life and progress.
 
-The basic view is a set of photos on a calendar month, in chronological order and with date changes clearly indicated. Previous months can be browsed, and all the photos inside a gallery can be viewed elargened on a Colorbox layer, the month view changing behind the scenes as necessary.
+The basic view is a set of photos on a calendar month, in chronological order and with date changes clearly indicated. Previous months can be browsed, and all the photos inside a gallery can be viewed enlargened on a Colorbox layer, the month view changing behind the scenes as necessary.
 
 The project started as a plain directory of photos with an Apache-generated index page, and has evolved organically to be more user-friendly, and to better support the ever-increasing number of photos and the longer timeframe.
 
@@ -14,7 +14,7 @@ For the gallery management, there is a command-line script (bin/admin.rb), which
 * Copy the new photos in the `full/` sub-directory
 * Run `bin/admin.rb add`, entering the properties (title, etc.) for each photo when prompted
 
-A single instance can support multiple separate galleries, hosted on different virtual hosts. The same photo may be included in multiple galleries, without limitations. The mapping of virtual host to library is done by extending the base backe-end class, with the `rb/galler_config.rb`.
+A single instance can support multiple separate galleries, hosted on different virtual hosts. The same photo may be included in multiple galleries, without limitations. The mapping of virtual host to library is done by extending the base back-end class, with the `rb/gallery_config.rb`.
 
 
 Requirements
