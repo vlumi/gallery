@@ -275,13 +275,11 @@ SQL
         @month_counts[y][m] += 1
       end
       if not @month_countries.has_key?(y) then
-        @month_countries[y] = { m => { row['country'] => 1 } }
+        @month_countries[y] = { m => [ row['country'] ] }
       elsif not @month_countries[y].has_key?(m) then
-        @month_countries[y][m] = { row['country'] => 1 }
-      elsif not @month_countries[y][m].has_key?(row['country']) then
-        @month_countries[y][m][row['country']] = 1
-      else
-        @month_countries[y][m][row['country']] += 1
+        @month_countries[y][m] = [ row['country'] ]
+      elsif @month_countries[y][m][-1] != row['country'] then
+        @month_countries[y][m].push(row['country'])
       end
 
       @moy_counts[m - 1]   += 1

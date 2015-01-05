@@ -210,11 +210,9 @@ gallery = Gallery::Gallery.new('gallery.sqlite3', filters)
 	 <td class="flags">
 <%
    if month_countries.key?(year) and month_countries[year].key?(month) then
-     current_countries = month_countries[year][month]
-     current_countries.keys.sort { |a, b| [current_countries[b], a] <=> [current_countries[a], b] } .each do |country|
-       count = current_countries[country]
+     month_countries[year][month].each do |country|
 %>
-       <img src="css/blank.gif" class="flag flag-<%=country%>" alt="<%=country%>" title="<%=country%>: <%=count%>">
+       <img src="css/blank.gif" class="flag flag-<%=country%>" alt="<%=country%>" title="<%=country%>">
 <%
      end
    end
