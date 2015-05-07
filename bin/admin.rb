@@ -786,7 +786,7 @@ def parse_exif(data, exif)
     taken: exif[:date_time_original].to_s,
 
     camera:  camera_name_from_exif(exif),
-    focal:   exif[:focal_length].round,
+    focal:   exif[:focal_length].to_i.round,
     fstop:   exif[:aperture_value],
     shutter: (exif[:exposure_time] ? exif[:exposure_time].to_s : exif[:exposure_value].to_s),
     iso:     exif[:iso_speed_ratings],
