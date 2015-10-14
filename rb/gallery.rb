@@ -52,7 +52,7 @@ module Gallery
 
   class Gallery
     attr_reader :name, :title, :description, :epoch,
-      :total_count,
+      :total_count, :total_days, :total_avg,
       :year_counts, :max_year_count, :year_avgs, :max_year_avg,
       :month_counts, :max_month_count, :month_avgs, :max_month_avg,
       :month_countries,
@@ -176,6 +176,8 @@ SQL
       end
 
       @total_count = id
+      @total_days = 0
+      @total_avg = 0
       return if @total_count == 0
 
       # Get extremes, to calculate proper day counts.
@@ -201,6 +203,7 @@ SQL
           days = end_date.yday
         end
         @year_avgs[y] = @year_counts[y].to_f / days
+        @total_days += days
 
         @month_avgs[y] = {}
         @month_counts[y].keys.each do |m|
@@ -217,6 +220,8 @@ SQL
           @month_avgs[y][m] = @month_counts[y][m].to_f / days
         end
       end
+
+      @total_avg = @total_count.to_f / @total_days
 
       @max_year_count  = @year_counts.values.max
       @max_year_avg    = @year_avgs.values.max

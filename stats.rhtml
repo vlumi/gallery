@@ -226,6 +226,18 @@ gallery = Gallery::Gallery.new('gallery.sqlite3', filters)
 <%
   end
 %>
+   <tbody>
+    <tr>
+	 <th>Total</th>
+	 <td colspan="10">
+	   <%=gallery.total_count%> photos
+	   |
+	   <%=gallery.total_days%> days
+	   |
+	   <%=sprintf("%.2f", gallery.total_avg)%> / day
+	 </td>
+    </tr>
+   </tbody>
   </table>
   
   <hr/>
