@@ -66,7 +66,7 @@ vlumi.gallery = (function() {
 			if (date_parts.length > 0) {
 				var cmpd = new Date(Date.UTC(parseInt(date_parts[1], 10), parseInt(date_parts[2], 10) - 1, parseInt(date_parts[3], 10), 23, 59, 59));
 				if (show_age) $(this).attr("title", vlumi.age.getDateDiffStr(epochd, cmpd, "date"));
-				if (show_age) $(this).find("span.age").html(vlumi.age.getDateDiffStr(epochd, cmpd, "date_short"));
+				if (show_age) $(this).find("span.age").html(vlumi.age.getDateDiffStr(epochd, cmpd, "index"));
 			}
 		});
 	}

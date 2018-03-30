@@ -200,6 +200,10 @@ vlumi.age = (function() {
 						val = t / 1000;
 						title_idx = 6;
 					}
+					else if (format == 'index') {
+						val = t / (1000 * 60 * 60 * 24);
+						return "#" + vlumi.age.format_bignum(val, ',', precision);
+					}
 				}
 				var title = (val == 1 ? partTitlesSingular[title_idx] : partTitlesPlural[title_idx]);
 				

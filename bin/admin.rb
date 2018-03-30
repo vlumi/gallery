@@ -78,12 +78,12 @@ def main
       # Photo commands.
 
       photos_db = {}
-      db.execute("SELECT " + @conf[:fields][:photos][:db].join(',') + " FROM photos") do |row|
+      db.execute("SELECT " + @conf[:fields][:photos][:db].join(',') + " FROM photo") do |row|
         photos_db[ row['name'] ] = row
       end
 
       gallery_photos = {}
-      db.execute("SELECT photo_name, gallery_name FROM photo_galleries ORDER BY photo_name") do |row|
+      db.execute("SELECT photo_name, gallery_name FROM photo_gallery ORDER BY photo_name") do |row|
         gallery_photos[ row['gallery_name'] ] ||= []
         gallery_photos[ row['gallery_name'] ].push row['photo_name']
       end
@@ -335,7 +335,7 @@ def insert_new_photos(opts)
 
   return if photos.length == 0
 
-  sql_ins_photos  = "INSERT INTO photos (" + fields[:db].join(',') + ") VALUES (" + fields[:db].collect{ |f| '?'}.join(',') + ")"
+  sql_ins_photos  = "INSERT INTO photo (" + fields[:db].join(',') + ") VALUES (" + fields[:db].collect{ |f| '?'}.join(',') + ")"
   stmt_ins_photos = db.prepare(sql_ins_photos)
 
   prev = Hash[
@@ -415,20 +415,13 @@ def update_photo_meta(opts)
   exif     = opts[:exif]
   old_data = opts[:old_data]
 
-  sql_upd_photos  = "UPDATE photos SET " + fields[:db].collect{ |field| field + '=?'  }.join(',') + " WHERE name=?"
+  sql_upd_photos  = "UPDATE photo SET " + fields[:db].collect{ |field| field + '=?'  }.join(',') + " WHERE name=?"
   stmt_upd_photos = db.prepare(sql_upd_photos)
 
   photos.each do |photo|
     data = {
       name:  photo,
       taken: '',
-
-      #      title:       old_data[photo]['title'],
-      #      description: old_data[photo]['description'],
-      #      country:     old_data[photo]['country'],
-      #      place:       old_data[photo]['place'],
-      #      location:    old_data[photo]['location'],
-      #      author:      old_data[photo]['author'],
 
       title:       '',
       description: '',
@@ -474,7 +467,7 @@ def update_photo_meta(opts)
 
     puts data if @conf[:debug]
 
-    create_thumbs(photo: photo)
+    create_thumbs(photo: photo, force: @conf[:force])
     
     Magick::ImageList.new("i/#{photo}").each do |img|
       data[:width], data[:height] = img.columns, img.rows
@@ -498,7 +491,7 @@ def remove_photo(opts)
 
   puts "Processing #{photo}" if @conf[:debug]
 
-  sql_del_photos  = "DELETE FROM photos WHERE name=?"
+  sql_del_photos  = "DELETE FROM photo WHERE name=?"
   stmt_del_photos = db.prepare(sql_del_photos)
 
   photos.each do |photo|
@@ -517,7 +510,7 @@ def show_photos(opts)
   if galleries.length > 0 then
     gphotos = []
 
-    sql_sel_gphotos = "SELECT DISTINCT photo_name FROM photo_galleries WHERE gallery_name IN (" + galleries.collect{ |g| '?' }.join(',') + ")"
+    sql_sel_gphotos = "SELECT DISTINCT photo_name FROM photo_gallery WHERE gallery_name IN (" + galleries.collect{ |g| '?' }.join(',') + ")"
     db.execute(sql_sel_gphotos, *galleries) do |row|
       gphotos << row['photo_name']
     end
@@ -544,7 +537,7 @@ def create_gallery(opts)
   db     = opts[:db]
   fields = opts[:fields]
 
-  sql_ins_gallery  = "INSERT INTO galleries (" + fields.join(',') + ") VALUES (" + fields.collect{ |f| '?' }.join(',')  + ")"
+  sql_ins_gallery  = "INSERT INTO gallery (" + fields.join(',') + ") VALUES (" + fields.collect{ |f| '?' }.join(',')  + ")"
   stmt_ins_gallery = db.prepare(sql_ins_gallery)
 
   data = {}
@@ -568,7 +561,7 @@ def update_galleries(opts)
 
   # Load previous values to use as default on the prompt.
   gallery_data = {}
-  sql_sel_galleries = "SELECT " + fields.join(',') + " FROM galleries WHERE name IN (" + galleries.collect{ |g| '?' }.join(',') + ")"
+  sql_sel_galleries = "SELECT " + fields.join(',') + " FROM gallery WHERE name IN (" + galleries.collect{ |g| '?' }.join(',') + ")"
   db.execute(sql_sel_galleries, *galleries) do |row|
     name = row['name']
     gallery_data[name] = {}
@@ -577,7 +570,7 @@ def update_galleries(opts)
     end
   end
 
-  sql_upd_gallery  = "UPDATE galleries SET " + fields.collect{ |f| "#{f}=?" }.join(',') + " WHERE name=?"
+  sql_upd_gallery  = "UPDATE gallery SET " + fields.collect{ |f| "#{f}=?" }.join(',') + " WHERE name=?"
   stmt_upd_gallery = db.prepare(sql_upd_gallery)
 
   galleries.each do |gallery|
@@ -604,7 +597,7 @@ def show_galleries(opts)
   db        = opts[:db]
   galleries = opts[:galleries]
 
-  sql_sel_galleries = "SELECT name, title, description, epoch FROM galleries"
+  sql_sel_galleries = "SELECT name, title, description, epoch FROM gallery"
   if galleries.length > 0 then
     sql_sel_galleries += " WHERE name IN (" + galleries.collect{ |g| '?' }.join(',') + ")"
   end
@@ -623,14 +616,14 @@ def list_gallery_photos(opts)
   galleries = opts[:galleries]
 
   if galleries.length == 0 then
-    sql_sel_galleries = "SELECT name FROM galleries"
+    sql_sel_galleries = "SELECT name FROM gallery"
     db.execute(sql_sel_galleries) do |row|
       galleries << row['name']
     end
     galleries << ':none'
   end
 
-  sql_sel_gphotos  = "SELECT photo_name FROM photo_galleries WHERE gallery_name=? ORDER BY photo_name"
+  sql_sel_gphotos  = "SELECT photo_name FROM photo_gallery WHERE gallery_name=? ORDER BY photo_name"
   galleries.sort_by { |gallery| gallery.downcase }.each do |gallery|
     next if gallery =~ /:/
     puts "#{gallery}:"
@@ -640,7 +633,7 @@ def list_gallery_photos(opts)
   end
   if galleries.include? ':none' then
     puts "Not in galleries:"
-    sql_sel_ngphotos = "SELECT name FROM photos WHERE name NOT IN (SELECT photo_name FROM photo_galleries)"
+    sql_sel_ngphotos = "SELECT name FROM photo WHERE name NOT IN (SELECT photo_name FROM photo_gallery)"
     db.execute(sql_sel_ngphotos) do |row|
       puts "  #{row['name']}"
     end
@@ -651,10 +644,10 @@ def delete_galleries(opts)
   db        = opts[:db]
   galleries = opts[:galleries]
 
-  sql_del_gphotos  = "DELETE FROM photo_galleries WHERE gallery_name=?"
+  sql_del_gphotos  = "DELETE FROM photo_gallery WHERE gallery_name=?"
   stmt_del_gphotos = db.prepare(sql_del_gphotos)
 
-  sql_del_gallery  = "DELETE FROM galleries WHERE name=?"
+  sql_del_gallery  = "DELETE FROM gallery WHERE name=?"
   stmt_del_gallery = db.prepare(sql_del_gallery)
 
   galleries.each do |gallery|
@@ -672,10 +665,10 @@ def add_photos_to_galleries(opts)
   photos    = opts[:photos]
   galleries = opts[:galleries]
   
-  sql_sel_gphotos  = "SELECT " + fields.join(',') + " FROM photo_galleries WHERE " + fields.collect{ |f| "#{f}=?" }.join(' AND ')
+  sql_sel_gphotos  = "SELECT " + fields.join(',') + " FROM photo_gallery WHERE " + fields.collect{ |f| "#{f}=?" }.join(' AND ')
   stmt_sel_gphotos = db.prepare(sql_sel_gphotos)
 
-  sql_ins_gphotos = "INSERT INTO photo_galleries (" + fields.join(',') + ") VALUES (" + fields.collect{ |f| '?' }.join(',') + ")"
+  sql_ins_gphotos = "INSERT INTO photo_gallery (" + fields.join(',') + ") VALUES (" + fields.collect{ |f| '?' }.join(',') + ")"
   stmt_ins_gphotos = db.prepare(sql_ins_gphotos)
 
   galleries.each do |gallery|
@@ -709,7 +702,7 @@ def remove_photos_from_galleries(opts)
   photos    = opts[:photos]
   galleries = opts[:galleries]
 
-  sql_del_gphotos  = "DELETE FROM photo_galleries WHERE " + fields.collect{ |f| "#{f}=?" }.join(' AND ')
+  sql_del_gphotos  = "DELETE FROM photo_gallery WHERE " + fields.collect{ |f| "#{f}=?" }.join(' AND ')
   stmt_del_gphotos = db.prepare(sql_del_gphotos)
 
   galleries.each do |gallery|
@@ -747,7 +740,7 @@ def create_thumbs(opts)
       puts "Creating thumbnail #{v[:width]}x#{v[:height]} for photo #{photo}" if @conf[:verbose]
 
       filename  = "#{k.to_s}/#{photo}"
-      img_thumb = img_full.resize_to_fit(v[:width], v[:height])
+      img_thumb = img_full.auto_orient.resize_to_fit(v[:width], v[:height])
       img_thumb.write(filename) unless @conf[:simulate]
       File.chmod(0644, filename)
     end
@@ -782,6 +775,7 @@ def camera_name_from_exif(exif)
 end
 
 def parse_exif(data, exif)
+  orientation = exif[:orientation].to_i
   {
     taken: exif[:date_time_original].to_s,
 
@@ -791,8 +785,8 @@ def parse_exif(data, exif)
     shutter: (exif[:exposure_time] ? exif[:exposure_time].to_s : exif[:exposure_value].to_s),
     iso:     exif[:iso_speed_ratings],
 
-    f_width:  exif[:width],
-    f_height: exif[:height],
+    f_width:  orientation % 2 == 0 ? exif[:height] : exif[:width],
+    f_height: orientation % 2 == 0 ? exif[:width] : exif[:height],
   }.each do |key, value|
     data[key] = value
   end

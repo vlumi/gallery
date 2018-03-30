@@ -102,9 +102,9 @@ module Gallery
         if filters[:gallery] != nil then
           gallery = filters[:gallery]
           if gallery == ':none' then
-            sql_filters.push 'name NOT IN (SELECT photo_name FROM photo_galleries)'
+            sql_filters.push 'name NOT IN (SELECT photo_name FROM photo_gallery)'
           else
-            sql_filters.push('photo_galleries.gallery_name=?')
+            sql_filters.push('photo_gallery.gallery_name=?')
             sql_filter_vals << filters[:gallery]
           end
         end
@@ -116,9 +116,9 @@ module Gallery
         end
       end
       if gallery != nil && gallery != ':none' then
-        sql = 'SELECT * FROM photos JOIN photo_galleries ON photo_galleries.photo_name=photos.name'
+        sql = 'SELECT * FROM photo JOIN photo_gallery ON photo_gallery.photo_name=photo.name'
       else
-        sql = 'SELECT * FROM photos'
+        sql = 'SELECT * FROM photo'
       end
       if sql_filters.length > 0 then
         sql = sql + ' WHERE ' + sql_filters.join(' AND ')
@@ -134,8 +134,8 @@ module Gallery
         @galleries = {}
         sql_sel_galleries = <<SQL
           SELECT name, title, description, epoch, COUNT(*), MIN(photo_name)
-           FROM galleries
-            LEFT OUTER JOIN photo_galleries ON (name=gallery_name)
+           FROM gallery
+            LEFT OUTER JOIN photo_gallery ON (name=gallery_name)
            GROUP BY name, title, description, epoch
            ORDER BY name
 SQL
@@ -158,10 +158,10 @@ SQL
 
         sql_sel_nogallery = <<SQL
           SELECT COUNT(*)
-           FROM photos
+           FROM photo
            WHERE name NOT IN (
             SELECT photo_name
-             FROM photo_galleries
+             FROM photo_gallery
            )
 SQL
         db.execute(sql_sel_nogallery) do |row|

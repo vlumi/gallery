@@ -1,16 +1,16 @@
 CREATE TABLE schema_info (
-  version INTEGER
+  version INTEGER PRIMARY KEY
 );
-INSERT INTO schema_info (version) VALUES (1);
+INSERT INTO schema_info (version) VALUES (2);
 
-CREATE TABLE galleries (
+CREATE TABLE gallery (
   name        TEXT PRIMARY KEY,
   title       TEXT,
   description TEXT,
   epoch       TEXT
 );
 
-CREATE TABLE photos (
+CREATE TABLE photo (
   name        TEXT PRIMARY KEY,
   title       TEXT,
   description TEXT,
@@ -31,9 +31,10 @@ CREATE TABLE photos (
   f_height    INTEGER
 );
 
-CREATE TABLE photo_galleries (
+CREATE TABLE photo_gallery (
   photo_name   TEXT,
   gallery_name TEXT,
+  PRIMARY KEY(photo_name, gallery_name),
   FOREIGN KEY(photo_name) REFERENCES photos(name),
   FOREIGN KEY(gallery_name) REFERENCES galleries(name)
 );
